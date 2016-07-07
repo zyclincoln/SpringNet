@@ -138,8 +138,9 @@ void Refresh(VectorXd &point, VectorXd &speed){
 	}
 
 	A = mass + pow(time_step,2)*stiff;
-	b = time_step*stiff*(offset_p + time_step*speed);
-	delta_v = A.colPivHouseholderQr().solve(b);
+	b = time_step*(offset_p-stiff*time_step*speed);
+
+        delta_v.head(3) = A.topLeftCorner(3, 3).colPivHouseholderQr().solve(b.head(3));
 	
 	speed = speed + delta_v;
 	point = point + time_step*speed;
