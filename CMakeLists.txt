@@ -5,7 +5,9 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModule")
 
 
-find_package(glfw3 3.2 REQUIRED)
+# find_package(glfw3 3.2 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW3 REQUIRED glfw3)
 
 find_package(GLEW)
 include_directories(${GLEW_INCLUDE_DIRS})
@@ -25,7 +27,8 @@ INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 add_executable(FirstTry FirstTry.cpp)
 
 target_link_libraries(FirstTry
-	glfw
+#	glfw
 	GLEW
 	${OPENGL_LIBRARIES}
+	${GLFW3_STATIC_LIBRARIES}
 )
