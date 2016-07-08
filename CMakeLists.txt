@@ -26,7 +26,7 @@ find_package(Boost COMPONENTS system thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 add_executable(FirstTry first_try.cpp)
-add_executable(ThreadTest multi_thread.cc)
+add_executable(FrameWorkTest framework_test.cc elastic_plane.cc matrix_op.cc net_reader.cc)
 
 target_link_libraries(FirstTry
 	glfw
@@ -34,9 +34,8 @@ target_link_libraries(FirstTry
 	${OPENGL_LIBRARIES}
 )
 
-target_link_libraries(ThreadTest
+target_link_libraries(FrameWorkTest
 	glfw
 	GLEW
 	${OPENGL_LIBRARIES}
-	${Boost_LIBRARIES}
 )

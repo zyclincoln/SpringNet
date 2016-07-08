@@ -3,15 +3,16 @@
 
 #include <vector>
 #include <set>
-#include <pair>
+#include <utility>
 #include <Eigen/Dense>
 
 struct Spring{
 public:
+	Spring(double stiff, double length, std::pair<unsigned int, unsigned int> between);
 	double stiff_;
 	double length_;
-	std::pair<int, int> between_;
-}
+	std::pair<unsigned int, unsigned int> between_;
+};
 
 class ElasticPlane{
 public:
@@ -24,14 +25,19 @@ public:
 	Eigen::VectorXd points_position();
 	Eigen::VectorXd points_speed();
 	Eigen::MatrixXd stiffness_matrix();
+	Eigen::VectorXd draw_line_index();
+	Eigen::VectorXd draw_line();
 	void set_time_step_ms(const double time_step_ms);
 	void next_frame();
 	void add_static_points(std::vector<unsigned int> index_of_static_points);
-	void add_points(const std::vector<double> &mass, const std::vector<Eigen::Vertex3d> &position, const std::vector<Eigen::Vector3d> &speed);
+	void add_points(const std::vector<double> &mass, const std::vector<Eigen::Vector3d> &position, const std::vector<Eigen::Vector3d> &speed);
 	void add_point(const unsigned int index, const double mass, const Eigen::Vector3d &position, const Eigen::Vector3d &speed);
 	void add_springs(const std::vector<double> &stiffness, const std::vector<double> &length, const std::vector<std::pair<int, int> > &between);
 	void add_spring(const unsigned int index, const double stiffness, const double length, const std::pair<int, int> &between);
+	void generate_draw_line();
+
 private:
+	void generate_draw_line_index();
 	void default_spring_layout();
 	void setup_matrix();
 	double time_step_ms_;
@@ -42,8 +48,17 @@ private:
 	Eigen::VectorXd points_position_;
 	Eigen::VectorXd points_speed_;
 	Eigen::MatrixXd stiffness_matrix_;
+	Eigen::VectorXd draw_line_index_;
+	Eigen::VectorXd draw_line_;
 	std::vector<Spring> springs_;
 	std::set<unsigned int> static_points_;
+};
+
+inline Spring::Spring(double stiff, double length, std::pair<unsigned int, unsigned int> between):
+	stiff_(stiff),
+	length_(length),
+	between_(between){
+
 }
 
 inline ElasticPlane::ElasticPlane(const unsigned int length, const unsigned int width, const unsigned springs):
@@ -89,8 +104,16 @@ inline Eigen::MatrixXd ElasticPlane::stiffness_matrix(){
 	return stiffness_matrix_;
 }
 
+inline Eigen::VectorXd ElasticPlane::draw_line_index(){
+	return draw_line_index_;
+}
+
 inline void ElasticPlane::set_time_step_ms(const double time_step_ms){
 	time_step_ms_ = time_step_ms;
+}
+
+inline Eigen::VectorXd ElasticPlane::draw_line(){
+	return draw_line_;
 }
 
 #endif

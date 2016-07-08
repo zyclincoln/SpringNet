@@ -8,15 +8,15 @@
 
 #include <Eigen/Dense>
 
-#include "Shader.hpp"
+#include "shader.hpp"
 
-//#define DEBUG_DETAIL
+#define DEBUG_DETAIL
 
 using namespace std;
 using namespace Eigen;
 
 MatrixXd mass = MatrixXd::Identity(9, 9);
-double time_step = 0.1;
+double time_step = 0.05;
 double length = 1;
 double min_y0,max_y0;
 
@@ -125,9 +125,9 @@ void Refresh(VectorXd &point, VectorXd &speed){
 		offset_p.block(index1*3, 0, 3, 1) += ((p0 - p1).norm() - length)*(p0 - p1).normalized();
 		
 		#ifdef DEBUG_DETAIL
-		cout<<"===vector p===\n"<<p0<<endl<<"===\n"<<p1<<endl;
-		cout<<"===substiff===\n"<<sub_stiff<<endl;
-		cout<<"===stiff===\n"<<stiff<<endl;
+		// cout<<"===vector p===\n"<<p0<<endl<<"===\n"<<p1<<endl;
+		// cout<<"===substiff===\n"<<sub_stiff<<endl;
+		// cout<<"===stiff===\n"<<stiff<<endl;
 		#endif
 
 	}
@@ -141,25 +141,27 @@ void Refresh(VectorXd &point, VectorXd &speed){
 	b = time_step*(offset_p-stiff*time_step*speed);
 
         delta_v.head(3) = A.topLeftCorner(3, 3).colPivHouseholderQr().solve(b.head(3));
-	
+	// cout<<"===offset_p===\n"<<offset_p<<endl;
 	speed = speed + delta_v;
 	point = point + time_step*speed;
 
 	#ifdef DEBUG_DETAIL
-	cout<<"===stiff===\n"<<stiff<<endl;
+	// cout<<"===stiff===\n"<<stiff<<endl;
+	cout<<"===A===\n"<<A<<endl;
+	cout<<"===b===\n"<<b<<endl;
+	cout<<"===delta_v===\n"<<delta_v<<endl;
 	cout<<"===speed===\n"<<speed<<endl;
 	cout<<"===point===\n"<<point<<endl;
-	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+	// cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
 
 	#endif
 
-	if(point(1,0)<min_y0){
-		min_y0=point(1,0);
-		cout<<"new min y0: "<<endl<<point(1,0)<<endl;
-	}
-	if(point(1,0)>max_y0){
-		max_y0=point(1,0);
-		cout<<"new max y0: "<<endl<<point(1,0)<<endl;
-	}
-	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+	// if(point(1,0)<min_y0){
+	// 	min_y0=point(1,0);
+	// 	cout<<"new min y0: "<<endl<<point(1,0)<<endl;
+	// }
+	// if(point(1,0)>max_y0){
+	// 	max_y0=point(1,0);
+	// 	cout<<"new max y0: "<<endl<<point(1,0)<<endl;
+	// }
 }

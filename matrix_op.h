@@ -5,9 +5,9 @@
 #include <set>
 #include <vector>
 
-Eigen::MatrixXd shrink_matrix(const Eigen::MatrixXd &matrix, const std::set<unsigned int> &update_row, const std::set<unsigned int> &update_col);
-Eigen::VectorXd shrink_colvector(const Eigen::VectorXd &vector, const std::set<unsigned int> &update_row);
-void map_to_original_colvector(const Eigen::VectorXd &shrinked_vector, const std::set<unsigned int> &update_row, Eigen::VectorXd &original_vector);
+void shrink_matrix(const Eigen::MatrixXd &matrix, const std::set<unsigned int> &remove_row, const std::set<unsigned int> &remove_col, Eigen::MatrixXd &shrinked_matrix);
+void shrink_colvector(const Eigen::VectorXd &vector, const std::set<unsigned int> &remove_row, Eigen::VectorXd &shrinked_vector);
+void map_to_original_colvector(const Eigen::VectorXd &shrinked_vector, const std::set<unsigned int> &remove_row, Eigen::VectorXd &original_vector);
 
 
 #endif
