@@ -22,10 +22,21 @@ include_directories(${OPENGL_INCLUDE_DIR})
 find_package(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 
-add_executable(FirstTry FirstTry.cpp)
+find_package(Boost COMPONENTS system thread REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
+add_executable(FirstTry first_try.cpp)
+add_executable(ThreadTest multi_thread.cc)
 
 target_link_libraries(FirstTry
 	glfw
 	GLEW
 	${OPENGL_LIBRARIES}
+)
+
+target_link_libraries(ThreadTest
+	glfw
+	GLEW
+	${OPENGL_LIBRARIES}
+	${Boost_LIBRARIES}
 )
