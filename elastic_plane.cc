@@ -55,8 +55,7 @@ void ElasticPlane::setup_matrix(){
 
 void ElasticPlane::next_frame(){
 	stiffness_matrix_.setZero();
-	VectorXd force = VectorXd::Zero((clength_+1)*(cwidth_+1)*3, 1);
-
+	VectorXd force = VectorXd::Zero(cpoints_*3, 1);
 	for(unsigned int i = 0; i < springs_.size(); i++){
 		unsigned index0 = springs_[i].between_.first;
 		unsigned index1 = springs_[i].between_.second;
@@ -75,22 +74,28 @@ void ElasticPlane::next_frame(){
 		force.block(index1*3, 0, 3, 1) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized();
 		// cout<<"===p_force===\n"<<((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized()<<endl;
 		// cout<<"===p_force===\n"<<((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized()<<endl;
+		cout<<"===part force===\n"<<index0<<" : "<<((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized().transpose()<<endl;
+		cout<<index1<<" : "<<((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized().transpose()<<endl;
 	}
 
-	MatrixXd A = MatrixXd::Zero((clength_+1)*(cwidth_+1)*3, (clength_+1)*(cwidth_+1)*3);
-	A = mass_matrix_ + pow(time_step_ms_, 2)*stiffness_matrix_;
-	VectorXd b = VectorXd::Zero((clength_+1)*(cwidth_+1)*3, 1);
-	b = time_step_ms_*(force - stiffness_matrix_*time_step_ms_*points_speed_);
+	for(unsigned int i=0; i < cpoints_; i++){
+		force.block(i*3, 0, 3, 1) += Vector3d(0, -9.8*0.001, 0);
+	}
 
+	cout<<"===total force===\n"<<force<<endl;
+
+	MatrixXd A = MatrixXd::Zero(cpoints_*3, cpoints_*3);
+	A = mass_matrix_ + pow(time_step_ms_, 2)*stiffness_matrix_;
+	VectorXd b = VectorXd::Zero(cpoints_*3, 1);
+	b = time_step_ms_*(force - stiffness_matrix_*time_step_ms_*points_speed_);
 	set<unsigned int> index_need_remove;
-	for(unsigned int i=0; i < (clength_+1)*(cwidth_+1); i++){
+	for(unsigned int i=0; i < cpoints_; i++){
 		if(static_points_.find(i)!=static_points_.end()){
 			index_need_remove.insert(i*3);
 			index_need_remove.insert(i*3+1);
 			index_need_remove.insert(i*3+2);
 		}
 	}
-
 	MatrixXd shrinked_A;
 	VectorXd shrinked_b;
 
@@ -99,14 +104,14 @@ void ElasticPlane::next_frame(){
 	// cout<<"===force===\n"<<force<<endl;
 	// cout<<"====A===\n"<<A<<endl;
 	// cout<<"===b===\n"<<b<<endl;
-
 	VectorXd shrinked_delta_v;
 	shrinked_delta_v = shrinked_A.colPivHouseholderQr().solve(shrinked_b);
-	VectorXd delta_v = VectorXd::Zero((clength_+1)*(cwidth_+1)*3, 1);
+	VectorXd delta_v = VectorXd::Zero(cpoints_*3, 1);
 	map_to_original_colvector(shrinked_delta_v, index_need_remove, delta_v);
 	// cout<<"===delta v===\n"<<delta_v<<endl;
 	points_speed_ += delta_v;
 	points_position_ += points_speed_*time_step_ms_;
+	cout<<"===point position===\n"<<points_position_<<endl;
 }
 
 void ElasticPlane::add_static_points(std::vector<unsigned int> index_of_static_points){
@@ -116,8 +121,6 @@ void ElasticPlane::add_static_points(std::vector<unsigned int> index_of_static_p
 }
 
 void ElasticPlane::add_points(const vector<double> &mass, const vector<Vector3d> &position, const vector<Vector3d> &speed){
-	assert(mass.size() == position.size());
-	assert(mass.size() == (clength_+1)*(cwidth_+1));
 
 	for(unsigned int i = 0; i < mass.size(); i++){
 		mass_matrix_.block(i*3, i*3, 3, 3) = Matrix3d::Identity()*mass[i];
@@ -134,21 +137,18 @@ void ElasticPlane::add_point(const unsigned int index, const double mass, const 
 	points_speed_.block(index*3, 0, 3, 1) = speed;
 }
 
-void ElasticPlane::add_springs(const vector<double> &stiffness, const vector<double> &length, const vector<pair<int, int> > &between){
+void ElasticPlane::add_springs(const vector<double> &stiffness, const vector<double> &length, const vector<pair<unsigned int, unsigned int> > &between){
 	assert(stiffness.size() == length.size());
 	assert(stiffness.size() == between.size());
-	assert(stiffness.size() == springs_.size());
 
 	for(unsigned int i = 0; i < stiffness.size(); i++){
-		springs_[i].stiff_ = stiffness[i];
-		springs_[i].length_ = length[i];
-		springs_[i].between_ = between[i];
+		springs_.push_back(Spring(stiffness[i], length[i], between[i]));
 	}
 
 	generate_draw_line_index();
 }
 
-void ElasticPlane::add_spring(const unsigned int index, const double stiffness, const double length, const pair<int, int> &between){
+void ElasticPlane::add_spring(const unsigned int index, const double stiffness, const double length, const pair<unsigned int, unsigned int> &between){
 	assert(index < springs_.size());
 
 	springs_[index].stiff_ = stiffness;

@@ -17,7 +17,8 @@ public:
 class ElasticPlane{
 public:
 	ElasticPlane(const unsigned int length, const unsigned int width, const unsigned int springs);
-	ElasticPlane(const unsigned int length, const unsigned int width);
+	// ElasticPlane(const unsigned int length, const unsigned int width);
+	ElasticPlane(const unsigned int points_num, const unsigned int springs_num);
 	unsigned int clength();
 	unsigned int cwidth();
 	double time_step_ms();
@@ -32,8 +33,8 @@ public:
 	void add_static_points(std::vector<unsigned int> index_of_static_points);
 	void add_points(const std::vector<double> &mass, const std::vector<Eigen::Vector3d> &position, const std::vector<Eigen::Vector3d> &speed);
 	void add_point(const unsigned int index, const double mass, const Eigen::Vector3d &position, const Eigen::Vector3d &speed);
-	void add_springs(const std::vector<double> &stiffness, const std::vector<double> &length, const std::vector<std::pair<int, int> > &between);
-	void add_spring(const unsigned int index, const double stiffness, const double length, const std::pair<int, int> &between);
+	void add_springs(const std::vector<double> &stiffness, const std::vector<double> &length, const std::vector<std::pair<unsigned int, unsigned int> > &between);
+	void add_spring(const unsigned int index, const double stiffness, const double length, const std::pair<unsigned int, unsigned int> &between);
 	void generate_draw_line();
 
 private:
@@ -52,6 +53,7 @@ private:
 	Eigen::VectorXd draw_line_;
 	std::vector<Spring> springs_;
 	std::set<unsigned int> static_points_;
+	unsigned int cpoints_;
 };
 
 inline Spring::Spring(double stiff, double length, std::pair<unsigned int, unsigned int> between):
@@ -64,16 +66,34 @@ inline Spring::Spring(double stiff, double length, std::pair<unsigned int, unsig
 inline ElasticPlane::ElasticPlane(const unsigned int length, const unsigned int width, const unsigned springs):
 	clength_(length),
 	cwidth_(width),
-	csprings_(springs){
+	csprings_(springs),
+	cpoints_((length+1)*(width+1)){
 	setup_matrix();
 }
 
-inline ElasticPlane::ElasticPlane(const unsigned int length, const unsigned int width):
-	clength_(length),
-	cwidth_(width),
-	csprings_(3*length*width+length+width){
-	setup_matrix();
-	default_spring_layout();
+// inline ElasticPlane::ElasticPlane(const unsigned int length, const unsigned int width):
+// 	clength_(length),
+// 	cwidth_(width),
+// 	csprings_(3*length*width+length+width),
+// 	cpoints_((length+1)*(width+1)){
+// 	setup_matrix();
+// 	default_spring_layout();
+// }
+
+inline ElasticPlane::ElasticPlane(const unsigned int points_num, const unsigned int springs_num):
+	clength_(0),
+	cwidth_(0),
+	csprings_(springs_num),
+	cpoints_(points_num){
+	mass_matrix_.resize(cpoints_*3, cpoints_*3);
+	stiffness_matrix_.resize(cpoints_*3, cpoints_*3);
+	points_position_.resize(cpoints_*3, 1);
+	points_speed_.resize(cpoints_*3, 1);
+
+	mass_matrix_.setZero();
+	stiffness_matrix_.setZero();
+	points_speed_.setZero();
+	points_position_.setZero();
 }
 
 inline unsigned int ElasticPlane::clength(){
