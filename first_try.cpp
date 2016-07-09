@@ -10,7 +10,7 @@
 
 #include "shader.hpp"
 
-#define DEBUG_DETAIL
+//#define DEBUG_DETAIL
 
 using namespace std;
 using namespace Eigen;
@@ -132,6 +132,8 @@ void Refresh(VectorXd &point, VectorXd &speed){
 
 	}
 
+	offset_p.block(0, 0, 3, 1) += Vector3d(0, -0.0098, 0);
+
 	for(int i=3; i<9; i++){
 		stiff.col(i).setZero();
 		stiff.row(i).setZero();
@@ -152,9 +154,10 @@ void Refresh(VectorXd &point, VectorXd &speed){
 	cout<<"===delta_v===\n"<<delta_v<<endl;
 	cout<<"===speed===\n"<<speed<<endl;
 	cout<<"===point===\n"<<point<<endl;
-	// cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
 
 	#endif
+cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
 
 	// if(point(1,0)<min_y0){
 	// 	min_y0=point(1,0);
