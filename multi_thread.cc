@@ -1,3 +1,5 @@
+#include <boost/thread/thread.hpp>
+
 #include <iostream>
 #include <unistd.h>
 #include <math.h>
@@ -10,19 +12,25 @@
 
 #include "Shader.hpp"
 
-//#define DEBUG_DETAIL
-
 using namespace std;
 using namespace Eigen;
 
 MatrixXd mass = MatrixXd::Identity(9, 9);
-double time_step = 0.05;
+double time_step = 0.1;
 double length = 1;
 double min_y0,max_y0;
 
 void Refresh(VectorXd &point, VectorXd &speed);
 
+int draw();
+
 int main(){
+	boost::thread thrd(&draw);
+	thrd.join();
+	return 0;
+}
+
+int draw(){
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
@@ -149,6 +157,8 @@ void Refresh(VectorXd &point, VectorXd &speed){
 	cout<<"===stiff===\n"<<stiff<<endl;
 	cout<<"===speed===\n"<<speed<<endl;
 	cout<<"===point===\n"<<point<<endl;
+	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+
 	#endif
 
 	if(point(1,0)<min_y0){
@@ -159,4 +169,8 @@ void Refresh(VectorXd &point, VectorXd &speed){
 		max_y0=point(1,0);
 		cout<<"new max y0: "<<endl<<point(1,0)<<endl;
 	}
+<<<<<<< HEAD:FirstTry.cpp
+=======
+	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+>>>>>>> 94e9c15dc02512fe5d28b90390b0d74ccb00beca:multi_thread.cc
 }
