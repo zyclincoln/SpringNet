@@ -169,5 +169,8 @@ void Refresh(VectorXd &point, VectorXd &speed){
 		max_y0=point(1,0);
 		cout<<"new max y0: "<<endl<<point(1,0)<<endl;
 	}
+<<<<<<< HEAD:FirstTry.cpp
+=======
 	cout<<"===spring length===\n"<<(point.block(0, 0, 3, 1) - point.block(3, 0, 3, 1)).norm()<<endl;
+>>>>>>> 94e9c15dc02512fe5d28b90390b0d74ccb00beca:multi_thread.cc
 }
