@@ -36,10 +36,12 @@ void shrink_colvector(const VectorXd &vector, const set<unsigned int> &remove_ro
 
 void map_to_original_colvector(const VectorXd &shrinked_vector, const set<unsigned int> &remove_row, VectorXd &original_vector){
 	unsigned int original_row = 0;
+	// cout<<"====shrinked_vector====\n"<<shrinked_vector.transpose()<<endl;
 	for(unsigned int row = 0; row < shrinked_vector.rows(); row++, original_row++){
 		while(remove_row.find(original_row) != remove_row.end()){
 			original_row++;
 		}
 		original_vector(original_row, 0) = shrinked_vector(row, 0);
+		// cout<<"====map process===\n"<<original_vector.transpose()<<endl;
 	}
 }

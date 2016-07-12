@@ -70,9 +70,13 @@ int main(int argc, char* argv[]){
 	obj_reader.sparse_model();
 	obj_reader.sparse_constraint(constraint_path.c_str());
 	ElasticPlane elastic_plane(obj_reader.points_num(), obj_reader.springs_num());
-	elastic_plane.add_points(obj_reader.mass(), obj_reader.points_position(), obj_reader.points_speed());
-	elastic_plane.add_springs(obj_reader.springs_stiff(), obj_reader.springs_length(), obj_reader.springs_pair());
-	elastic_plane.add_static_points(obj_reader.index_of_static_points());
+	// elastic_plane.add_points(obj_reader.mass(), obj_reader.points_position(), obj_reader.points_speed());
+	// elastic_plane.add_springs(obj_reader.springs_stiff(), obj_reader.springs_length(), obj_reader.springs_pair());
+	// elastic_plane.add_static_points(obj_reader.index_of_static_points());
+
+    elastic_plane.add_points_2D(obj_reader.mass(), obj_reader.points_position(), obj_reader.points_speed());
+    elastic_plane.add_springs(obj_reader.springs_stiff(), obj_reader.springs_length(), obj_reader.springs_pair());
+    elastic_plane.add_static_points(obj_reader.index_of_static_points());
 
 	elastic_plane.set_time_step_ms(0.05);
 	GLuint VBO, VAO, EBO;
@@ -83,10 +87,11 @@ int main(int argc, char* argv[]){
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	elastic_plane.generate_draw_line();
+	elastic_plane.generate_draw_line_2D();
+
 	glBufferData(GL_ARRAY_BUFFER,
-		sizeof(double)*(elastic_plane.draw_line().rows()),
-		elastic_plane.draw_line().data(),
+		sizeof(double)*(elastic_plane.draw_line_2D().rows()),
+		elastic_plane.draw_line_2D().data(),
 		GL_DYNAMIC_DRAW);
 	// glBufferData(GL_ARRAY_BUFFER, 
 	// 	sizeof(double)*(elastic_plane.points_position().rows()), 
@@ -111,12 +116,12 @@ int main(int argc, char* argv[]){
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		elastic_plane.generate_draw_line();
+		elastic_plane.generate_draw_line_2D();
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, 
-			sizeof(double)*(elastic_plane.draw_line().rows()),
-			elastic_plane.draw_line().data(),
+			sizeof(double)*(elastic_plane.draw_line_2D().rows()),
+			elastic_plane.draw_line_2D().data(),
 			GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -130,10 +135,11 @@ int main(int argc, char* argv[]){
 			getchar();
 		}
 
-		usleep(10000);
-		elastic_plane.next_frame();
+			// usleep(10000);
 
-		elastic_plane.generate_draw_line();
+		elastic_plane.next_frame_2D();
+
+		elastic_plane.generate_draw_line_2D();
 
 		glfwSwapBuffers(window);
 	}

@@ -25,13 +25,13 @@ void Obj_Reader::sparse_model(){
 	}
 	fin.close();
 
-	for(int i=0; i<mass_.size(); i++){
-		cout<<i<<" : mass "<<mass_[i]<<" position "<<points_position_[i].transpose()<<" speed "<<points_speed_[i].transpose()<<endl;
-	}
+	// for(int i=0; i<mass_.size(); i++){
+	// 	cout<<i<<" : mass "<<mass_[i]<<" position "<<points_position_[i].transpose()<<" speed "<<points_speed_[i].transpose()<<endl;
+	// }
 
-	for(int i=0; i<springs_stiff_.size(); i++){
-		cout<<i<<" : stiff "<<springs_stiff_[i]<<" length "<<springs_length_[i]<<" between "<<springs_pair_[i].first<<" "<<springs_pair_[i].second<<endl;
-	}
+	// for(int i=0; i<springs_stiff_.size(); i++){
+	// 	cout<<i<<" : stiff "<<springs_stiff_[i]<<" length "<<springs_length_[i]<<" between "<<springs_pair_[i].first<<" "<<springs_pair_[i].second<<endl;
+	// }
 }
 
 void Obj_Reader::sparse_constraint(const char *path){
