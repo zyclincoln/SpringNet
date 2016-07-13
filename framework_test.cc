@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
     elastic_plane.add_springs(obj_reader.springs_stiff(), obj_reader.springs_length(), obj_reader.springs_pair());
     elastic_plane.add_static_points(obj_reader.index_of_static_points());
 
-	elastic_plane.set_time_step_ms(0.05);
+	elastic_plane.set_time_step_ms(0.2);
 	GLuint VBO, VAO, EBO;
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);

@@ -58,7 +58,7 @@ void Obj_Reader::sparse_point(string line){
 	sstream >> x >> y >> z;
 	points_position_.push_back(Vector3d(x, y, z));
 	points_speed_.push_back(Vector3d(0, 0, 0));
-	mass_.push_back(1);
+	mass_.push_back(10);
 }
 
 void Obj_Reader::sparse_edge(string line){

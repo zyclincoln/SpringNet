@@ -55,6 +55,7 @@ private:
 	std::vector<Spring> springs_;
 	std::set<unsigned int> static_points_;
 	unsigned int cpoints_;
+	bool first = false;
 };
 
 inline Spring::Spring(double stiff, double length, std::pair<unsigned int, unsigned int> between):

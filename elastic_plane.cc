@@ -29,7 +29,7 @@ void ElasticPlane::next_frame(){
 
 	VectorXd pt = points_position_;
 
-	for(int iter = 0; iter < 1 ; iter++) {
+	for(int iter = 0; iter < 10 ; iter++) {
 		stiffness_matrix_.setZero();
 		VectorXd force = VectorXd::Zero(cpoints_*3, 1);
 		for(unsigned int i = 0; i < springs_.size(); i++){
@@ -46,47 +46,29 @@ void ElasticPlane::next_frame(){
 			stiffness_matrix_.block(index1*3, index0*3, 3, 3) -= sub_stiff;
 			force.segment<3>(index0*3) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized();
 			force.segment<3>(index1*3) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized();
-	
-			// cout<<"===part force===\n"<<
-			// 	"p0 : "<<p0.transpose()<<endl<<
-			// 	"p1 : "<<p1.transpose()<<endl<<
-			// 	"offset : "<<(p1-p0).norm()-springs_[i].length_<<endl<<
-			// 	"direction : "<<(p1 - p0).normalized().transpose()<<endl<<
-			// 	"force : "<<((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized().transpose()<<endl;
 		}
 	
 		for(unsigned int i=0; i < cpoints_; i++){
-			force.segment<3>(i*3) += Vector3d(0, -9.8*0.001, 0);
+			force.segment<3>(i*3) += Vector3d(0, -9.8*0.002, 0);
 		}
-	
-		// cout<<"===total force===\n"<<force.transpose()<<endl;
 	
 		MatrixXd A = MatrixXd::Zero(cpoints_*3, cpoints_*3);
 		A = mass_matrix_ + pow(time_step_ms_, 2)*stiffness_matrix_;
 		VectorXd b = VectorXd::Zero(cpoints_*3, 1);
 		b = -mass_matrix_*(pt - points_position_ - time_step_ms_*points_speed_) + pow(time_step_ms_, 2) * force;
-		// b = time_step_ms_*(force - stiffness_matrix_*time_step_ms_*points_speed_);
 		MatrixXd shrinked_A;
 		VectorXd shrinked_b;
 	
 		shrink_matrix(A, index_need_remove, index_need_remove, shrinked_A);
 		shrink_colvector(b, index_need_remove, shrinked_b);
-		// cout<<"===A===\n"<<A<<endl;
-		// cout<<"===shrinked_A===\n"<<shrinked_A<<endl;
-		// cout<<"===b===\n"<<b.transpose()<<endl;
-		// cout<<"===shrinked_b===\n"<<shrinked_b.transpose()<<endl;
 		VectorXd shrinked_delta_p = shrinked_A.colPivHouseholderQr().solve(shrinked_b);
 		VectorXd delta_p = VectorXd::Zero(cpoints_*3, 1);
 		map_to_original_colvector(shrinked_delta_p, index_need_remove, delta_p);
-		// cout<<"===delta_p===\n"<<delta_p.transpose()<<endl;
 		pt += delta_p;
-		// cout<<"===pt===\n"<<pt.transpose()<<endl;
-		//getchar();
 	}
 
 	points_speed_ = (pt - points_position_)/time_step_ms_;
 	points_position_ = pt;
-	// cout<<"===point position===\n"<<points_position_<<endl;
 }
 
 void ElasticPlane::next_frame_2D(){
@@ -98,53 +80,52 @@ void ElasticPlane::next_frame_2D(){
 		}
 	}
 
-	VectorXd pt = points_position_2D_;
-	for(int iter = 0; iter < 1 ; iter++) {
-		stiffness_matrix_2D_.setZero();
+		stiffness_matrix_2D_.setZero();	
 		VectorXd force = VectorXd::Zero(cpoints_*2, 1);
 		for(unsigned int i = 0; i < springs_.size(); i++){
 			unsigned index0 = springs_[i].between_.first;
 			unsigned index1 = springs_[i].between_.second;
-			Vector2d p0 = pt.segment<2>(index0*2);
-			Vector2d p1 = pt.segment<2>(index1*2);
+			Vector2d p0 = points_position_2D_.segment<2>(index0*2);
+			Vector2d p1 = points_position_2D_.segment<2>(index1*2);
 
 
-			Matrix2d sub_stiff = Matrix2d::Identity()*(1 - 1/springs_[i].length_);
-			sub_stiff += (p1 - p0)*(p1 - p0).transpose()/pow(springs_[i].length_,3);
-			stiffness_matrix_.block(index0*2, index0*2, 2, 2) += sub_stiff;
-			stiffness_matrix_.block(index1*2, index1*2, 2, 2) += sub_stiff;
-			stiffness_matrix_.block(index0*2, index1*2, 2, 2) -= sub_stiff;
-			stiffness_matrix_.block(index1*2, index0*2, 2, 2) -= sub_stiff;
-			force.segment<2>(index0*2) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized();
+			Matrix2d sub_stiff = 40*Matrix2d::Identity()*(1 - springs_[i].length_/(p1 - p0).norm());
+			sub_stiff += 40*springs_[i].length_*(p1 - p0)*(p1 - p0).transpose()/pow((p1 - p0).norm(),3);
+			
+			stiffness_matrix_2D_.block(index0*2, index0*2, 2, 2) += sub_stiff;
+			stiffness_matrix_2D_.block(index1*2, index1*2, 2, 2) += sub_stiff;
+			stiffness_matrix_2D_.block(index0*2, index1*2, 2, 2) -= sub_stiff;
+			stiffness_matrix_2D_.block(index1*2, index0*2, 2, 2) -= sub_stiff;
+			
+			force.segment<2>(index0*2) += ((p0 - p1).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized();
 			force.segment<2>(index1*2) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized();
 		}
 
-	
 		for(unsigned int i=0; i < cpoints_; i++){
-			force.segment<2>(i*2) += Vector2d(0, -9.8*0.001);
+			force.segment<2>(i*2) += Vector2d(0, -10*0.05);
 		}
 
 	
 		MatrixXd A = MatrixXd::Zero(cpoints_*2, cpoints_*2);
 		A = mass_matrix_2D_ + pow(time_step_ms_, 2)*stiffness_matrix_2D_;
 		VectorXd b = VectorXd::Zero(cpoints_*2, 1);
-		b = -mass_matrix_2D_*(pt - points_position_2D_ - time_step_ms_*points_speed_2D_) + pow(time_step_ms_, 2) * force;
+		//b = -mass_matrix_2D_*(pt - points_position_2D_ - time_step_ms_*points_speed_2D_) + pow(time_step_ms_, 2) * force;
+		b = force*time_step_ms_ - pow(time_step_ms_, 2)*stiffness_matrix_2D_*points_speed_2D_;
 
 		MatrixXd shrinked_A;
 		VectorXd shrinked_b;
-    
+
 		shrink_matrix(A, index_need_remove, index_need_remove, shrinked_A);
 		shrink_colvector(b, index_need_remove, shrinked_b);
-		VectorXd shrinked_delta_p = shrinked_A.colPivHouseholderQr().solve(shrinked_b);
-		VectorXd delta_p = VectorXd::Zero(cpoints_*2, 1);
-		map_to_original_colvector(shrinked_delta_p, index_need_remove, delta_p);
-		pt += delta_p;
-	}
-
-	points_speed_2D_ = (pt - points_position_2D_)/time_step_ms_;
-	points_position_2D_ = pt;
-
-	// cout<<"===position===\n"<<points_position_2D_<<endl;
+		//VectorXd shrinked_delta_v = shrinked_A.colPivHouseholderQr().solve(shrinked_b);
+		VectorXd shrinked_delta_v = shrinked_A.inverse() * shrinked_b;
+		VectorXd delta_v = VectorXd::Zero(cpoints_*2, 1);
+		map_to_original_colvector(shrinked_delta_v, index_need_remove, delta_v);
+		cout<<"===f===\n"<<force<<endl;
+		cout<<"===A===\n"<<shrinked_A<<endl;
+		cout<<"===b===\n"<<shrinked_b<<endl;
+	points_speed_2D_ += delta_v;
+	points_position_2D_ += points_speed_2D_ * time_step_ms_;
 }
 
 void ElasticPlane::add_static_points(std::vector<unsigned int> index_of_static_points){
@@ -184,7 +165,7 @@ void ElasticPlane::add_springs(const vector<double> &stiffness, const vector<dou
 	assert(stiffness.size() == between.size());
 
 	for(unsigned int i = 0; i < stiffness.size(); i++){
-		springs_.push_back(Spring(stiffness[i]*200, length[i], between[i]));
+		springs_.push_back(Spring(stiffness[i]*40, length[i], between[i]));
 	}
 
 	generate_draw_line_index();
