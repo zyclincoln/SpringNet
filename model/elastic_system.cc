@@ -2,13 +2,11 @@
 #include <math.h>
 #include <iostream>
 #include "elastic_system.h"
-#include "../utility/matrix_op.h"
+#include "matrix_op.h"
 
 using namespace Eigen;
 using namespace std;
 using namespace zyclincoln;
-
-using index = unsigned int;
 
 ElasticSystem::ElasticSystem(const unsigned int points_num, const unsigned int springs_num):
 	csprings_(springs_num),
@@ -23,15 +21,15 @@ ElasticSystem::ElasticSystem(const unsigned int points_num, const unsigned int s
 VectorXd ElasticSystem::delta_potential_energy_vector(){
 	VectorXd delta_vector = VectorXd::Zero(cpoints_*3);
 	//points potential energy
-	for(index i = 0; i < points_.size(); i++){
+	for(unsigned int i = 0; i < points_.size(); i++){
 		delta_vector.segment<3>(3*i) += points_potential_energy_calculator_.calculate_delta_potential_energy(points_[i]);
 	}
 
 	//string potential energy
-	for(index i = 0; i < strings_.size(); i++){
-		VectorXd delta = strings_potential_energy_calculator_.calculate_delta_potential_energy(strings_[i], points_[strings_[i].between.first], points_[strings_[i].between.second]);
-		delta_vector.segment<3>(3*strings_[i].between_.first) += delta.segment<3>(0);
-		delta_vector.segment<3>(3*strings_[i].between_.second) += delta.segment<3>(3);
+	for(unsigned int i = 0; i < springs_.size(); i++){
+		VectorXd delta = springs_potential_energy_calculator_.calculate_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second]);
+		delta_vector.segment<3>(3*springs_[i].between_.first) += delta.segment<3>(0);
+		delta_vector.segment<3>(3*springs_[i].between_.second) += delta.segment<3>(3);
 	}
 
 	VectorXd shrinked_vector;
@@ -44,44 +42,48 @@ MatrixXd ElasticSystem::delta_delta_potential_energy_matrix(){
 	//points potential energy -- nothing to do
 
 	//string potential energy
-	for(index i=0; i < strings_.size(); i++){
-		MatrixXd delta = strings_potential_energy_calculator_.calculate_delta_delta_potential_energy(strings_[i], points_[strings_[i].between.first], points_[strings_[i].between.second]);
-		delta_delta_matrix.block(3*strings_[i].between_.first, 3*strings_[i].between_.first, 3, 3) = delta.block(0, 0, 3, 3);
-		delta_delta_matrix.block(3*strings_[i].between_.first, 3*strings_[i].between_.second, 3, 3) = delta.block(0, 3, 3, 3);
-		delta_delta_matrix.block(3*strings_[i].between_.second, 3*strings_[i].between_.first, 3, 3) = delta.block(3, 0, 3, 3);
-		delta_delta_matrix.block(3*strings_[i].between_.second, 3*strings_[i].between_.second, 3, 3) = delta.block(3, 3, 3, 3);	
+	for(unsigned int i=0; i < springs_.size(); i++){
+		MatrixXd delta = springs_potential_energy_calculator_.calculate_delta_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second]);
+		delta_delta_matrix.block(3*springs_[i].between_.first, 3*springs_[i].between_.first, 3, 3) += delta.block(0, 0, 3, 3);
+		delta_delta_matrix.block(3*springs_[i].between_.first, 3*springs_[i].between_.second, 3, 3) += delta.block(0, 3, 3, 3);
+		delta_delta_matrix.block(3*springs_[i].between_.second, 3*springs_[i].between_.first, 3, 3) += delta.block(3, 0, 3, 3);
+		delta_delta_matrix.block(3*springs_[i].between_.second, 3*springs_[i].between_.second, 3, 3) += delta.block(3, 3, 3, 3);	
 	}
 
 	MatrixXd shrinked_matrix;
-	ShrinkMatirx(delta_delta_matrix, static_lines_, static_lines_, shrinked_matrix);
+	ShrinkMatrix(delta_delta_matrix, static_lines_, static_lines_, shrinked_matrix);
 
 	return shrinked_matrix;
 }
 
 void ElasticSystem::update_velocity_vector(const VectorXd &velocity){
-	assert(velocity.rows() == points_.size()*3);
-	
-	VectorXd original_velocity = MapToOriginalColVector(velocity, static_lines_, original_velocity);
+	VectorXd original_velocity;
+	MapToOriginalColVector(velocity, static_lines_, original_velocity);
+	assert(original_velocity.rows() == points_.size()*3);
 
-	aux_points_velocity_vector_ = original_velocity;
-	for(index i = 0; i < points_.size(); i++){
-		points_[i].speed_ = original_velocity.segment<3>(i*3);
+	for(unsigned int i = 0; i < points_.size(); i++){
+		if(static_points_.find(i) == static_points_.end()){
+			points_[i].speed_ = original_velocity.segment<3>(i*3);
+			aux_points_velocity_vector_.segment<3>(i*3) = original_velocity.segment<3>(i*3);
+		}
 	}
 }
 
 void ElasticSystem::update_position_vector(const VectorXd &position){
-	assert(position.rows() == points_.size()*3);
+	VectorXd original_position;
+	MapToOriginalColVector(position, static_lines_, original_position);
+	assert(original_position.rows() == points_.size()*3);
 
-	VectorXd original_position = MapToOriginalColVector(position, static_lines_, original_position);
-
-	aux_points_position_vector_ = original_position;
-	for(index i = 0; i < points_.size(); i++){
-		points_[i].position_ = original_position.segment<3>(i*3);
+	for(unsigned int i = 0; i < points_.size(); i++){
+		if(static_points_.find(i) == static_points_.end()){
+			points_[i].position_ = original_position.segment<3>(i*3);
+			aux_points_position_vector_.segment<3>(i*3) = original_position.segment<3>(i*3);
+		}
 	}
 }
 
-void ElasticSystem::add_static_points(std::vector<index> index_of_static_points){
-	for(index i = 0; i < index_of_static_points.size(); i++){
+void ElasticSystem::add_static_points(std::vector<unsigned int> index_of_static_points){
+	for(unsigned int i = 0; i < index_of_static_points.size(); i++){
 		static_points_.insert(index_of_static_points[i]);
 		static_lines_.insert(index_of_static_points[i]*3);
 		static_lines_.insert(index_of_static_points[i]*3+1);
@@ -96,13 +98,15 @@ void ElasticSystem::add_points(const std::vector<Point> &points){
 
 	points_.insert(points_.end(), points.begin(), points.end());
 
-	for(index i = 0; i < points.size(); i++){
-		aux_mass_matrix_(current_size + i, current_size + i) = points[i].mass_;
+	for(unsigned int i = 0; i < points.size(); i++){
+		aux_mass_matrix_.block((current_size + i)*3, (current_size + i)*3, 3, 3) = MatrixXd::Identity(3, 3)*points[i].mass_;
+		aux_points_position_vector_.segment<3>((current_size + i)*3) = points[i].position_;
+		aux_points_velocity_vector_.segment<3>((current_size + i)*3) = points[i].speed_;
 	}
 }
 
 void ElasticSystem::add_springs(const std::vector<Spring> &springs){
-	assert(springs.size() + springs_.size() <= cstrings_);
+	assert(springs.size() + springs_.size() <= csprings_);
 
 	springs_.insert(springs_.end(), springs.begin(), springs.end());
 }
@@ -110,7 +114,7 @@ void ElasticSystem::add_springs(const std::vector<Spring> &springs){
 void ElasticSystem::update_draw_line(){
 	draw_line_ = VectorXd::Zero(springs_.size()*6, 1);
 
-	for(index i=0; i<springs_.size(); i++){
+	for(unsigned int i=0; i<springs_.size(); i++){
 		draw_line_.segment<3>(i*6) = aux_points_position_vector_.segment<3>(springs_[i].between_.first*3);
 		draw_line_.segment<3>(i*6+3) = aux_points_position_vector_.segment<3>(springs_[i].between_.second*3);
 	}

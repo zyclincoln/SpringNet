@@ -10,7 +10,7 @@ namespace zyclincoln{
   class Integrator{
   public:
     virtual void next_frame(AbstractSystem& system) = 0;
-  }
+  };
 
 }
 

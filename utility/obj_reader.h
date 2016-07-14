@@ -12,10 +12,10 @@ namespace zyclincoln{
 
 	class OBJReader{
 	public:
-		OBJReader(const char* path);
-		void set_file_name(const char* path);
-		std::vector<Eigen::Vector3d> points_position();
-		std::vector<std::pair<unsigned int, unsigned int> > unqiue_pairs();
+		OBJReader();
+		void set_file_name(const std::string path);
+		std::vector<Eigen::Vector3d>& points_position();
+		std::vector<std::pair<unsigned int, unsigned int> > unique_pairs();
 		unsigned int points_num();
 		unsigned int unique_pairs_num();
 		std::vector<double> edges_length();
@@ -30,23 +30,23 @@ namespace zyclincoln{
 		std::string file_name_;
 	};
 
-	inline std::vector<Eigen::Vector3d> OBJReader::points_position(){
+	inline std::vector<Eigen::Vector3d>& OBJReader::points_position(){
 		return points_position_;
 	}
 
-	inline void set_file_name(const char* path){
-		file_name_ = std::string(path);
+	inline void OBJReader::set_file_name(const std::string path){
+		file_name_ = path;
 	}
 
-	inline std::vector<std::pair<unsigned int, unsigned int> > OBJReader::springs_pair(){
-		return springs_pair_;
+	inline std::vector<std::pair<unsigned int, unsigned int> > OBJReader::unique_pairs(){
+		return unique_pair_;
 	}
 
 	inline unsigned int OBJReader::points_num(){
 		return points_position_.size();
 	}
 
-	inline unsigned int OBJReader::unique_pairs(){
+	inline unsigned int OBJReader::unique_pairs_num(){
 		return edges_length_.size();
 	}
 

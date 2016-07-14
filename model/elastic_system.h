@@ -8,11 +8,12 @@
 
 #include "../algorithm/spring_potential_energy.h"
 #include "../algorithm/point_potential_energy.h"
+#include "matrix_op.h"
 #include "abstract_system.h"
 #include "spring.h"
 #include "point.h"
 
-namespace zuclincoln{
+namespace zyclincoln{
 
 	class ElasticSystem : public AbstractSystem{
 	public:
@@ -28,6 +29,8 @@ namespace zuclincoln{
     virtual void update_position_vector(const Eigen::VectorXd &position);
 
 		void set_time_step_ms(const double time_step_ms);
+		void set_points_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator);
+		void set_springs_potential_energy_calculator(const SpringPotentialEnergyCalculator &calculator);
 		Eigen::VectorXd draw_line();
 		void add_static_points(std::vector<unsigned int> index_of_static_points);
 		void add_points(const std::vector<Point> &points);
@@ -50,8 +53,8 @@ namespace zuclincoln{
 		std::set<unsigned int> static_points_;
 		std::set<unsigned int> static_lines_;
 
-		PointPotentialEnergyCalculator *points_potential_energy_calculator_;
-		SpringPotentialEnergyCalculator *springs_potential_energy_calculator_;
+		PointPotentialEnergyCalculator points_potential_energy_calculator_;
+		SpringPotentialEnergyCalculator springs_potential_energy_calculator_;
 	};
 
 	inline double ElasticSystem::time_step_ms(){
@@ -59,19 +62,36 @@ namespace zuclincoln{
 	}
 
 	inline Eigen::MatrixXd ElasticSystem::mass_matrix(){
-		return aux_mass_matrix_;
+		Eigen::MatrixXd shrinked_mass;
+		ShrinkMatrix(aux_mass_matrix_, static_lines_, static_lines_, shrinked_mass);
+
+		return shrinked_mass;
 	}
 
 	inline Eigen::VectorXd ElasticSystem::position_vector(){
-		return aux_points_position_vector_;
+		Eigen::VectorXd shrinked_position;
+		ShrinkColVector(aux_points_position_vector_, static_lines_, shrinked_position);
+
+		return shrinked_position;
 	}
 
 	inline Eigen::VectorXd ElasticSystem::velocity_vector(){
-		return aux_points_velocity_vector_;
+		Eigen::VectorXd shrinked_velocity;
+		ShrinkColVector(aux_points_velocity_vector_, static_lines_, shrinked_velocity);
+
+		return shrinked_velocity;
 	}
 
 	inline void ElasticSystem::set_time_step_ms(const double time_step_ms){
 		time_step_ms_ = time_step_ms;
+	}
+
+	inline void ElasticSystem::set_points_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator){
+		points_potential_energy_calculator_ = calculator;
+	}
+
+	inline void ElasticSystem::set_springs_potential_energy_calculator(const SpringPotentialEnergyCalculator &calculator){
+		springs_potential_energy_calculator_ = calculator;
 	}
 
 	inline Eigen::VectorXd ElasticSystem::draw_line(){

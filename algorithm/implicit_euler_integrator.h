@@ -8,7 +8,7 @@ namespace zyclincoln{
   class ImplicitEulerIntegrator : public Integrator{
   public:
     virtual void next_frame(AbstractSystem& system);
-  }
+  };
 
 }
 

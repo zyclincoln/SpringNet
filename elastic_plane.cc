@@ -96,7 +96,7 @@ void ElasticPlane::next_frame_2D(){
 			stiffness_matrix_2D_.block(index1*2, index1*2, 2, 2) += sub_stiff;
 			stiffness_matrix_2D_.block(index0*2, index1*2, 2, 2) -= sub_stiff;
 			stiffness_matrix_2D_.block(index1*2, index0*2, 2, 2) -= sub_stiff;
-			
+			// cout<<"==sub_stiff==\n"<<index0<<"  "<<index1<<endl<<sub_stiff<<endl;
 			force.segment<2>(index0*2) += ((p0 - p1).norm() - springs_[i].length_)*springs_[i].stiff_*(p1 - p0).normalized();
 			force.segment<2>(index1*2) += ((p1 - p0).norm() - springs_[i].length_)*springs_[i].stiff_*(p0 - p1).normalized();
 		}
@@ -121,11 +121,13 @@ void ElasticPlane::next_frame_2D(){
 		VectorXd shrinked_delta_v = shrinked_A.inverse() * shrinked_b;
 		VectorXd delta_v = VectorXd::Zero(cpoints_*2, 1);
 		map_to_original_colvector(shrinked_delta_v, index_need_remove, delta_v);
-		cout<<"===f===\n"<<force<<endl;
-		cout<<"===A===\n"<<shrinked_A<<endl;
-		cout<<"===b===\n"<<shrinked_b<<endl;
+		// cout<<"===f===\n"<<force<<endl;
+		// cout<<"===A===\n"<<shrinked_A<<endl;
+		// cout<<"===b===\n"<<shrinked_b<<endl;
 	points_speed_2D_ += delta_v;
 	points_position_2D_ += points_speed_2D_ * time_step_ms_;
+	cout<<"new speed\n"<<points_speed_2D_<<endl;
+	cout<<"new position\n"<<points_position_2D_<<endl;
 }
 
 void ElasticPlane::add_static_points(std::vector<unsigned int> index_of_static_points){

@@ -3,14 +3,16 @@
 
 #include <Eigen/Dense>
 
+#include "../model/point.h"
+
 namespace zyclincoln{
 
   class PointPotentialEnergyCalculator{
   public:
-    double claculate_potential_energy(Point &point);
-    VectorXd calculate_delta_potential_energy(Point &point);
-    MatrixXd calculator_delta_delta_potential_energy(Point &point);
-  }
+    double calculate_potential_energy(Point &point);
+    Eigen::VectorXd calculate_delta_potential_energy(Point &point);
+    Eigen::MatrixXd calculate_delta_delta_potential_energy(Point &point);
+  };
 }
 
 #endif
