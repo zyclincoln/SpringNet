@@ -8,20 +8,6 @@ using namespace zyclincoln;
 
 using index = unsigned int;
 
-Point::Point(Vector3d &position, Vector3d &speed, double mass):
-  position_(position),
-  speed_(speed),
-  mass_(mass){
-
-}
-
-Spring::Spring(double stiff, double length, pair<index, index> between):
-  stiff_(stiff),
-  length_(length),
-  between_(between){
-
-}
-
 void SpringMassModuler::AddPoint(vector<Vector3d> &positions){
   for(index i = 0; i < positions.size(); i++){
     points_.push_back(Point(positions[i], Vector3d(0, 0, 0), 1));
