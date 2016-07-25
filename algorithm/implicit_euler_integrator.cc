@@ -14,7 +14,7 @@ void ImplicitEulerIntegrator::next_frame(AbstractSystem& system){
     pow(system.time_step_ms(), 2)*system.delta_delta_potential_energy_matrix();
   VectorXd b = -system.delta_potential_energy_vector()*system.time_step_ms() - 
     pow(system.time_step_ms(), 2)*system.delta_delta_potential_energy_matrix()*system.velocity_vector();
-  //VectorXd delta_velocity = A.colPivHouseholderQr().solve(b);
+  // VectorXd delta_velocity = A.colPivHouseholderQr().solve(b);
   VectorXd delta_velocity = A.inverse()*b;
   VectorXd new_velocity = system.velocity_vector() + delta_velocity;
   VectorXd new_position = system.position_vector() + new_velocity*system.time_step_ms();
