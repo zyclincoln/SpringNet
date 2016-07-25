@@ -29,18 +29,23 @@ SET(LIB_SRC
   algorithm/implicit_euler_integrator.cc
   algorithm/point_potential_energy.cc
   algorithm/spring_potential_energy.cc
+  algorithm/tetrahedron_potential_energy.cc
   model/elastic_system.cc
+  model/fem_system.cc
   model/point.cc
   model/spring.cc
   model/matrix_op.cc
+  model/tetrahedron.cc
   utility/obj_reader.cc
   utility/spring_mass_moduler.cc
+  utility/vtk_reader.cc
 )
 
 add_library(spring_mass_system STATIC ${LIB_SRC})
 
 add_executable(FrameWorkTest framework_test.cc elastic_plane.cc matrix_op.cc obj_reader.cc)
 add_executable(SpringMassSystem spring_mass_system.cc)
+add_executable(Test ./test/vtk_reader_test.cc)
 
 target_link_libraries(FrameWorkTest
 	glfw
@@ -52,5 +57,9 @@ target_link_libraries(SpringMassSystem
   glfw
   GLEW
   ${OPENGL_LIBRARIES}
+  spring_mass_system
+)
+
+target_link_libraries(Test
   spring_mass_system
 )

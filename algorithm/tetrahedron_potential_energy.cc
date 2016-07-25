@@ -50,6 +50,7 @@ P = lambda*(-3+delta0)^2 + miu*(delta(1,1)^2 + delta(1,2)^2/2 + delta(2,2)^2 + d
 #include "tetrahedron_potential_energy.h"
 
 #include <iostream>
+#include <math.h>
 #include <Eigen/Dense>
 
 using namespace std;
@@ -66,37 +67,37 @@ void TetrahedronPotentialEnergyCalculator::PreCompute(Tetrahedron &tetrahedron, 
 
   delta_ = Matrix3d::Zero();
 
-  delta_(1, 1) = tetrahedron.p_inverse_(3, 1)*tetrahedron.dx_(1, 3) + tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(1, 2)
-    + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(1, 1) - 1;
-  delta_(2, 2) = tetrahedron.p_inverse_(3, 2)*tetrahedron.dx_(2, 3) + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(2, 2)
-    + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(2, 1) - 1;
-  delta_(3, 3) = tetrahedron.p_inverse_(3, 3)*tetrahedron.dx_(3, 3) + tetrahedron.p_inverse_(2, 3)*tetrahedron.dx_(3, 2)
-    + tetrahedron.p_inverse_(1, 3)*tetrahedron.dx_(3, 1) - 1;
-  delta_(1, 2) = tetrahedron.p_inverse_(3, 2)*tetrahedron.dx_(1, 3) + tetrahedron.p_inverse_(3, 1)*tetrahedron.dx_(2, 3)
-    + tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(2, 2) + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(1, 2)
-    + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(2, 1) + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(1, 1);
-  delta_(1, 3) = tetrahedron.p_inverse_(3, 1)*tetrahedron.dx_(3, 3) + tetrahedron.p_inverse_(3, 3)*tetrahedron.dx_(1, 3)
-    + tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(3, 2) + tetrahedron.p_inverse_(2, 3)*tetrahedron.dx_(1, 2)
-    + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(3, 1) + tetrahedron.p_inverse_(1, 3)*tetrahedron.dx_(1, 1);
-  delta_(2, 3) = tetrahedron.p_inverse_(3, 2)*tetrahedron.dx_(3, 3) + tetrahedron.p_inverse_(3, 3)*tetrahedron.dx_(2, 3)
-    + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(3, 2) + tetrahedron.p_inverse_(2, 3)*tetrahedron.dx_(2, 2)
-    + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(3, 1) + tetrahedron.p_inverse_(1, 3)*tetrahedron.dx_(2, 1);
-  delta_(3, 2) = delta_(2, 3);
-  delta_(3, 1) = delta_(1, 3);
+  delta_(0, 0) = tetrahedron.p_inverse_(2, 0)*tetrahedron.dx_(0, 2) + tetrahedron.p_inverse_(1, 0)*tetrahedron.dx_(0, 1)
+    + tetrahedron.p_inverse_(0, 0)*tetrahedron.dx_(0, 0) - 1;
+  delta_(1, 1) = tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(1, 2) + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(1, 1)
+    + tetrahedron.p_inverse_(0, 1)*tetrahedron.dx_(1, 0) - 1;
+  delta_(2, 2) = tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(2, 2) + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(2, 1)
+    + tetrahedron.p_inverse_(0, 2)*tetrahedron.dx_(2, 0) - 1;
+  delta_(0, 1) = tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(0, 2) + tetrahedron.p_inverse_(2, 0)*tetrahedron.dx_(1, 2)
+    + tetrahedron.p_inverse_(1, 0)*tetrahedron.dx_(1, 1) + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(0, 1)
+    + tetrahedron.p_inverse_(0, 0)*tetrahedron.dx_(1, 0) + tetrahedron.p_inverse_(0, 1)*tetrahedron.dx_(0, 0);
+  delta_(0, 2) = tetrahedron.p_inverse_(2, 0)*tetrahedron.dx_(2, 2) + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(0, 2)
+    + tetrahedron.p_inverse_(1, 0)*tetrahedron.dx_(2, 1) + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(0, 1)
+    + tetrahedron.p_inverse_(0, 0)*tetrahedron.dx_(2, 0) + tetrahedron.p_inverse_(0, 2)*tetrahedron.dx_(0, 0);
+  delta_(1, 2) = tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(2, 2) + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(1, 2)
+    + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(2, 1) + tetrahedron.p_inverse_(1, 2)*tetrahedron.dx_(1, 1)
+    + tetrahedron.p_inverse_(0, 1)*tetrahedron.dx_(2, 0) + tetrahedron.p_inverse_(0, 2)*tetrahedron.dx_(1, 0);
   delta_(2, 1) = delta_(1, 2);
+  delta_(2, 0) = delta_(0, 2);
+  delta_(1, 0) = delta_(0, 1);
 
-  double delta_0_ =  tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(1, 1) + tetrahedron.p_inverse_(2, 1)*tetrahedron.dx_(1, 2)
-    + tetrahedron.p_inverse_(3, 1)*tetrahedron.dx_(1, 3) + tetrahedron.p_inverse_(1, 2) + tetrahedron.dx_(2, 1)
-    + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(2, 2) + tetrahedron.p_inverse_(3, 2) + tetrahedron.dx_(2, 3)
-    + tetrahedron.p_inverse_(1, 3)*tetrahedron.dx_(3, 1) + tetrahedron.p_inverse_(2, 3) + tetrahedron.dx_(3, 2)
-    + tetrahedron.p_inverse_(3, 3)*tetrahedron.dx_(3, 3);
+  double delta_0_ =  tetrahedron.p_inverse_(0, 0)*tetrahedron.dx_(0, 0) + tetrahedron.p_inverse_(1, 0)*tetrahedron.dx_(0, 1)
+    + tetrahedron.p_inverse_(2, 0)*tetrahedron.dx_(0, 2) + tetrahedron.p_inverse_(0, 1) + tetrahedron.dx_(1, 0)
+    + tetrahedron.p_inverse_(1, 1)*tetrahedron.dx_(1, 1) + tetrahedron.p_inverse_(2, 1) + tetrahedron.dx_(1, 2)
+    + tetrahedron.p_inverse_(0, 2)*tetrahedron.dx_(2, 0) + tetrahedron.p_inverse_(1, 2) + tetrahedron.dx_(2, 1)
+    + tetrahedron.p_inverse_(2, 2)*tetrahedron.dx_(2, 2);
 }
 
 double TetrahedronPotentialEnergyCalculator::calculate_potential_energy(Tetrahedron &tetrahedron){
   double energy = 0;
   energy = tetrahedron.lambda_*pow((-3 + delta_0_), 2);
-  energy += tetrahedron.miu_*(pow(delta_(1, 1), 2) + pow(delta_(1, 2), 2)/2 + pow(delta_(2, 2), 2)^2
-    + pow(delta_(1, 3), 2)/2 + pow(delta_(3, 3), 2) + pow(delta_(2, 3), 2)/2);
+  energy += tetrahedron.miu_*(pow(delta_(0, 0), 2) + pow(delta_(0, 1), 2)*0.5 + pow(delta_(1, 1), 2)*0.5
+    + pow(delta_(0, 2), 2)*0.5 + pow(delta_(2, 2), 2) + pow(delta_(1, 2), 2)*0.5);
 
   return energy;
 }
@@ -108,22 +109,22 @@ VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(
 
   VectorXd line1;
   line1.resize(12, 1);
-  line1.segment(1, 1, 3, 1) = tetrahedron.v_;
-  line1.segment(4, 1, 3, 1) = tetrahedron.p_inverse_.row(1).transpose();
-  line1.segment(7, 1, 3, 1) = tetrahedron.p_inverse_.row(2).transpose();
-  line1.segment(10, 1, 3, 1) = tetrahedron.p_inverse_.row(3).transpose();
+  line1.segment<3>(0) = tetrahedron.v_;
+  for(unsigned int i = 0; i < 3; i++){
+    line1.segment<3>((i+1)*3) = tetrahedron.p_inverse_.row(i).transpose();
+  }
 
   elastic_force = 2*tetrahedron.lambda_*line1*(-3 + delta_0_);
 
   Matrix3d matrix1 = delta_;
-  matrix1(1, 1) *= 2;
-  matrix1(2, 2) *= 2;
-  matrix1(3, 3) *= 2;
+  for(unsigned int i = 0; i < 3; i++){
+    matrix1(i, i) *=2;
+  }
 
-  elastic_force.segment(1, 1, 3, 1) += tetrahedron.miu_*matrix1*tetrahedron.v_();
-  elastic_force.segment(4, 1, 3, 1) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(1).transpose();
-  elastic_force.segment(7, 1, 3, 1) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(2).transpose();
-  elastic_force.segment(10, 1, 3, 1) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(3).transpose();
+  elastic_force.segment<3>(0) += tetrahedron.miu_*matrix1*tetrahedron.v_;
+  for(unsigned int i = 0; i < 3; i++){
+    elastic_force.segment<3>((i+1)*3) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(i).transpose();
+  }
 
   assert(elastic_force.sum() == 0);
 
@@ -135,21 +136,21 @@ MatrixXd TetrahedronPotentialEnergyCalculator::calculate_delta_delta_potential_e
     stiff.resize(12, 12);
     stiff.setZero();
 
-    stiff.block(1, 1, 3, 3) = (2*tetrahedron.lambda_ + tetrahedron.miu_)*tetrahedron.v_*tetrahedron.v_.transpose()
-      + tetrahedron.miu_*tetrahedron.v_.transpose()*tetrahedron.v_*Matrix3d::Identity(3); 
+    stiff.block(0, 0, 3, 3) = (2*tetrahedron.lambda_ + tetrahedron.miu_)*tetrahedron.v_*tetrahedron.v_.transpose()
+      + (tetrahedron.miu_*tetrahedron.v_.transpose()*tetrahedron.v_)(0,0)*Matrix3d::Identity(); 
     
     for(unsigned int i = 0; i < 3; i++){
-      stiff.block(1, i*3+1, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i + 1).transpose()*tetrahedron.v_.transpose();
-        + 2*tetrahedron.lambda_*tetrahedron.v_*tetrahedron.p_inverse_.row(i + 1)
-        + tetrahedron.miu_*tetrahedron.p_inverse_.row(i + 1)*tetrahedron.v_*Matrix3d::Identity(3);
-      stiff.block(i*3+1, 1, 3, 3) = stiff.block(1, i*3+1, 3, 3).transpose();
+      stiff.block(0, i*3, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i).transpose()*tetrahedron.v_.transpose();
+        + 2*tetrahedron.lambda_*tetrahedron.v_*tetrahedron.p_inverse_.row(i)
+        + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i)*tetrahedron.v_)(0,0)*Matrix3d::Identity();
+      stiff.block(i*3, 0, 3, 3) = stiff.block(0, i*3, 3, 3).transpose();
     }
 
     for(unsigned int i = 1; i < 4; i++){
       for(unsigned int j = 1; j < 4; j++){
-        stiff.block(i*3+1, j*3+1, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i).transpose()*tetrahedron.p_inverse_.col(j)
-          + tetrahedron.miu_*tetrahedron.p_inverse_.col(j)*tetrahedron.p_inverse_.row(i)
-          + tetrahedron.miu_*p_inverse_.row(i)*tetrahedron.p_inverse_.col(j)*Matrix3d::Identity();
+        stiff.block(i*3, j*3, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.p_inverse_.col(j - 1).transpose()
+          + tetrahedron.miu_*tetrahedron.p_inverse_.col(j - 1)*tetrahedron.p_inverse_.row(i - 1) +
+          + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.p_inverse_.col(j - 1))(0,0)*Matrix3d::Identity();
       }
     }
 

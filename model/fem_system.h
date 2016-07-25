@@ -2,6 +2,8 @@
 #define _FEM_SYSTEM_H_
 
 #include <Eigen/Dense>
+#include <utility>
+#include <set>
 
 #include "../algorithm/point_potential_energy.h"
 #include "../algorithm/tetrahedron_potential_energy.h"
@@ -12,7 +14,7 @@
 namespace zyclincoln{
   class LinearFEMSystem : public AbstractSystem{
   public:
-    LinearFEMSystem(const unsigned int points_num, const unsigned int tetrahedron_num);
+    LinearFEMSystem(const unsigned int points_num, const unsigned int tetrahedrons_num);
 
     virtual double time_step_ms();
     virtual Eigen::MatrixXd mass_matrix();
@@ -24,13 +26,13 @@ namespace zyclincoln{
     virtual void update_position_vector(const Eigen::VectorXd &position);
 
     void set_time_step_ms(const double time_step_ms);
-    void set_points_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator);
-    void set_tetrahedron_potential_energy_Calculator(const TetrahedronPotentialEnergyCalculator &calculator);
-    Eigen::VectorXd draw_triangle();
+    void set_point_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator);
+    void set_tetrahedron_potential_energy_calculator(const TetrahedronPotentialEnergyCalculator &calculator);
+    Eigen::VectorXd draw_line();
     void add_static_points(std::vector<unsigned int> index_of_static_points);
     void add_points(const std::vector<Point> &points);
-    void add_tetrahedron(const std::vector<Tetrahedron> &tetrahedrons);
-    void update_draw_triangle();
+    void add_tetrahedrons(const std::vector<Tetrahedron> &tetrahedrons);
+    void update_draw_line();
   
   private:
     const unsigned int ctetrahedrons_;
@@ -43,7 +45,7 @@ namespace zyclincoln{
     Eigen::VectorXd aux_points_velocity_vector_;
     Eigen::VectorXd aux_points_position_vector_;
 
-    Eigen::VectorXd draw_triangle_;
+    Eigen::VectorXd draw_line_;
 
     std::set<unsigned int> static_points_;
 
@@ -71,7 +73,7 @@ namespace zyclincoln{
     time_step_ms_ = time_step_ms;
   }
 
-  inline void LinearFEMSystem::set_points_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator){
+  inline void LinearFEMSystem::set_point_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator){
     point_potential_energy_calculator_ = calculator;
   }
 
@@ -79,8 +81,8 @@ namespace zyclincoln{
     tetrahedron_potential_energy_calculator_ = calculator;
   }
 
-  inline Eigen::VectorXd LinearFEMSystem::draw_triangle(){
-    return draw_triangle_;
+  inline Eigen::VectorXd LinearFEMSystem::draw_line(){
+    return draw_line_;
   }
 
 }
