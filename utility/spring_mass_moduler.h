@@ -14,7 +14,7 @@ namespace zyclincoln{
   public:
     void AddPoint(const std::vector<Eigen::Vector3d> &positions);
     void AddSpring(const std::vector<std::pair<unsigned int, unsigned int>> &pairs, const std::vector<double> &edges_length);
-    void AddConstraint(const std::string path);
+    void AddConstraint(const std::string &path);
     std::vector<Point> point();
     std::vector<Spring> spring();
     std::vector<unsigned int> index_of_static_points();

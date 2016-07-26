@@ -20,7 +20,7 @@ void SpringMassModuler::AddSpring(const vector<pair<unsigned int, unsigned int>>
   }
 }
 
-void SpringMassModuler::AddConstraint(const string path){
+void SpringMassModuler::AddConstraint(const string &path){
   ifstream constraint_file;
   constraint_file.open(path);
 

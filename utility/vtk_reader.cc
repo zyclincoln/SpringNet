@@ -37,7 +37,6 @@ void VTKReader::ParseModel(){
 
   fin.close();
 
-  cout<<"=======finish parse========"<<endl;
 }
 
 void VTKReader::ParsePoint(fstream &fin, unsigned int num){
@@ -47,8 +46,6 @@ void VTKReader::ParsePoint(fstream &fin, unsigned int num){
     double x, y, z;
     fin >> x >> y >> z;
     points_position_.push_back(Vector3d(x, y, z));
-  
-    cout<<"# point: "<<x<<" "<<y<<" "<<z<<endl;
   }
 
 }
@@ -66,7 +63,5 @@ void VTKReader::ParseTetrahedron(fstream &fin, unsigned int num){
     index.push_back(id3);
 
     tetrahedrons_point_.push_back(index);
-
-    cout<<"# tetrahedron: "<<" "<<id0<<" "<<id1<<" "<<id2<<" "<<id3<<endl;
   }
 }
