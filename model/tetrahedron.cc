@@ -1,17 +1,17 @@
 #include "tetrahedron.h"
 #include <assert.h>
-
+#include <iostream>
 using namespace std;
 using namespace zyclincoln;
 using namespace Eigen;
 
-Tetrahedron::Tetrahedron(const double poison, const double young, const vector<unsigned int> points_index):
+Tetrahedron::Tetrahedron(const double poison, const double young, const vector<unsigned int> &points_index):
   poison_(poison),
-  young_(young),
-  points_index_(points_index_){
+  young_(young){
 
-  assert(points_index.size() == 3);
+  assert(points_index.size() == 4);
 
+  points_index_ = points_index;
   p_inverse_ = MatrixXd::Zero(3, 3);
   v_ = Vector3d::Zero();
 
@@ -20,15 +20,26 @@ Tetrahedron::Tetrahedron(const double poison, const double young, const vector<u
 }
 
 void Tetrahedron::PreCompute(const std::vector<Point> &points){
-  assert(points.size() == 3);
+  assert(points.size() == 4);
 
   MatrixXd position = MatrixXd::Zero(3, 3);
 
   for(unsigned int i = 0; i < 3; i++){
-    position.col(i + 1) = points[i + 1].position_ - points[0].position_;
+    position.col(i) = points[i + 1].position_ - points[0].position_;
   }
 
   p_inverse_ = position.inverse();
-  v_ = -p_inverse_.row(1).transpose() - p_inverse_.row(2).transpose() - p_inverse_.row(3).transpose();
 
+  v_ = -p_inverse_.row(0).transpose() - p_inverse_.row(1).transpose() - p_inverse_.row(2).transpose();
+
+}
+
+void Tetrahedron::ComputeDx(const std::vector<Point> &points){
+  assert(points.size() == 4);
+
+  dx_ = MatrixXd::Zero(3, 3);
+
+  for(unsigned int i = 0; i < 3; i++){
+    dx_.col(i) = points[i+1].position_ - points[0].position_;
+  }
 }

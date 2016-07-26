@@ -126,7 +126,7 @@ VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(
     elastic_force.segment<3>((i+1)*3) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(i).transpose();
   }
 
-  assert(elastic_force.sum() == 0);
+  cout << elastic_force.sum() << endl;
 
   return elastic_force;
 }
@@ -138,21 +138,21 @@ MatrixXd TetrahedronPotentialEnergyCalculator::calculate_delta_delta_potential_e
 
     stiff.block(0, 0, 3, 3) = (2*tetrahedron.lambda_ + tetrahedron.miu_)*tetrahedron.v_*tetrahedron.v_.transpose()
       + (tetrahedron.miu_*tetrahedron.v_.transpose()*tetrahedron.v_)(0,0)*Matrix3d::Identity(); 
-    
-    for(unsigned int i = 0; i < 3; i++){
-      stiff.block(0, i*3, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i).transpose()*tetrahedron.v_.transpose();
-        + 2*tetrahedron.lambda_*tetrahedron.v_*tetrahedron.p_inverse_.row(i)
-        + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i)*tetrahedron.v_)(0,0)*Matrix3d::Identity();
-      stiff.block(i*3, 0, 3, 3) = stiff.block(0, i*3, 3, 3).transpose();
+    for(unsigned int i = 1; i < 4; i++){
+      stiff.block(0, i*3, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.v_.transpose()
+        + 2*tetrahedron.lambda_*tetrahedron.v_*tetrahedron.p_inverse_.row(i - 1)
+        + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.v_)(0, 0)*Matrix3d::Identity();
+      //stiff.block(i*3, 0, 3, 3) = stiff.block(0, i*3, 3, 3).transpose();
+      stiff.block(i*3, 0, 3, 3) = tetrahedron.miu_*tetrahedron.v_*tetrahedron.p_inverse_.row(i - 1)
+        + 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.v_.transpose()
+        + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.v_)(0, 0)*Matrix3d::Identity();
     }
-
     for(unsigned int i = 1; i < 4; i++){
       for(unsigned int j = 1; j < 4; j++){
-        stiff.block(i*3, j*3, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.p_inverse_.col(j - 1).transpose()
-          + tetrahedron.miu_*tetrahedron.p_inverse_.col(j - 1)*tetrahedron.p_inverse_.row(i - 1) +
-          + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.p_inverse_.col(j - 1))(0,0)*Matrix3d::Identity();
+        stiff.block(i*3, j*3, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.p_inverse_.row(j - 1)
+          + tetrahedron.miu_*tetrahedron.p_inverse_.row(j - 1).transpose()*tetrahedron.p_inverse_.row(i - 1) +
+          + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.p_inverse_.row(j - 1).transpose())(0,0)*Matrix3d::Identity();
       }
     }
-
     return stiff;
 }

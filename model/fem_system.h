@@ -33,6 +33,8 @@ namespace zyclincoln{
     void add_points(const std::vector<Point> &points);
     void add_tetrahedrons(const std::vector<Tetrahedron> &tetrahedrons);
     void update_draw_line();
+    std::vector<Point> points();
+    std::vector<Tetrahedron> tetrahedrons();
   
   private:
     const unsigned int ctetrahedrons_;
@@ -83,6 +85,14 @@ namespace zyclincoln{
 
   inline Eigen::VectorXd LinearFEMSystem::draw_line(){
     return draw_line_;
+  }
+
+  inline std::vector<Point> LinearFEMSystem::points(){
+    return points_;
+  }
+
+  inline std::vector<Tetrahedron> LinearFEMSystem::tetrahedrons(){
+    return tetrahedrons_;
   }
 
 }

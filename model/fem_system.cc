@@ -95,18 +95,30 @@ void LinearFEMSystem::add_points(const std::vector<Point> &points){
     aux_points_position_vector_.segment<3>((current_size + i)*3) = points[i].position_;
     aux_points_velocity_vector_.segment<3>((current_size + i)*3) = points[i].speed_;
   }
+
+  cout<<"add "<<points.size()<<" points"<<endl;
 }
 
 void LinearFEMSystem::add_tetrahedrons(const std::vector<Tetrahedron> &tetrahedrons){
   assert(tetrahedrons.size() + tetrahedrons_.size() <= ctetrahedrons_);
 
+  unsigned int current_size = tetrahedrons_.size();
+
   tetrahedrons_.insert(tetrahedrons_.end(), tetrahedrons.begin(), tetrahedrons.end());
+
+  for(unsigned int i = 0; i < tetrahedrons.size(); i++){
+    vector<Point> point_set;
+    point_set.push_back(points_[tetrahedrons[i].points_index_[0]]);
+    point_set.push_back(points_[tetrahedrons[i].points_index_[1]]);
+    point_set.push_back(points_[tetrahedrons[i].points_index_[2]]);
+    point_set.push_back(points_[tetrahedrons[i].points_index_[3]]);
+    tetrahedrons_[current_size + i].PreCompute(point_set);
+  }
 }
 
 void LinearFEMSystem::update_draw_line(){
   draw_line_ = VectorXd::Zero(tetrahedrons_.size()*6*2*3, 1);
-
-  for(unsigned int i=0; i<tetrahedrons_.size(); i++){
+  for(unsigned int i = 0; i<tetrahedrons_.size(); i++){
     draw_line_.segment<3>(i*36) = aux_points_position_vector_.segment<3>(tetrahedrons_[i].points_index_[0]);
     draw_line_.segment<3>(i*36+3) = aux_points_position_vector_.segment<3>(tetrahedrons_[i].points_index_[1]);
     draw_line_.segment<3>(i*36+6) = aux_points_position_vector_.segment<3>(tetrahedrons_[i].points_index_[0]);

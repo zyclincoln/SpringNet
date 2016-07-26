@@ -121,7 +121,7 @@ int main(int argc, char** argv){
 //  return run(system, window);
 
   ImplicitEulerIntegrator integrator;
-  for(unsigned int i = 0; i < 10; i++){
+  for(unsigned int i = 0; i < 10; i++){ 
     stringstream ss;
     string output(argv[1]);
     ss << output << "_result_" << i+1 << ".vtk";

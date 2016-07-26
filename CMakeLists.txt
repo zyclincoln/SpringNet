@@ -39,6 +39,7 @@ SET(LIB_SRC
   utility/obj_reader.cc
   utility/spring_mass_moduler.cc
   utility/vtk_reader.cc
+  utility/tetrahedron_moduler.cc
 )
 
 add_library(spring_mass_system STATIC ${LIB_SRC})
@@ -46,6 +47,7 @@ add_library(spring_mass_system STATIC ${LIB_SRC})
 add_executable(FrameWorkTest framework_test.cc elastic_plane.cc matrix_op.cc obj_reader.cc)
 add_executable(SpringMassSystem spring_mass_system.cc)
 add_executable(Test ./test/vtk_reader_test.cc)
+add_executable(LinearFEMSystem tetrahedron_linear_system.cc)
 
 target_link_libraries(FrameWorkTest
 	glfw
@@ -61,5 +63,12 @@ target_link_libraries(SpringMassSystem
 )
 
 target_link_libraries(Test
+  spring_mass_system
+)
+
+target_link_libraries(LinearFEMSystem
+  glfw
+  GLEW
+  ${OPENGL_LIBRARIES}
   spring_mass_system
 )

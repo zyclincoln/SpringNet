@@ -9,7 +9,7 @@ namespace zyclincoln{
 
   struct Tetrahedron{
   public:
-    Tetrahedron(const double poison, const double young, const std::vector<unsigned int> points_index);
+    Tetrahedron(const double poison, const double young, const std::vector<unsigned int> &points_index);
     void PreCompute(const std::vector<Point> &points);
     void ComputeDx(const std::vector<Point> &points);
     double poison_;
