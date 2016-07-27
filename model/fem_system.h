@@ -46,6 +46,8 @@ namespace zyclincoln{
     Eigen::MatrixXd aux_mass_matrix_;
     Eigen::VectorXd aux_points_velocity_vector_;
     Eigen::VectorXd aux_points_position_vector_;
+    Eigen::MatrixXd delta_2_potential_matrix_;
+    bool delta_2_potential_matrix_computed_ = false;
 
     Eigen::VectorXd draw_line_;
 

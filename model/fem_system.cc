@@ -39,20 +39,23 @@ VectorXd LinearFEMSystem::delta_potential_energy_vector(){
 }
 
 MatrixXd LinearFEMSystem::delta_delta_potential_energy_matrix(){
-  MatrixXd delta_delta_matrix = MatrixXd::Zero(cpoints_*3, cpoints_*3);
-  //points potential energy -- nothing to do
+  if(delta_2_potential_matrix_computed_ == false){
+    delta_2_potential_matrix_ = MatrixXd::Zero(cpoints_*3, cpoints_*3);
+    //points potential energy -- nothing to do
 
-  //tetrahedron potential energy
-  for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
-    MatrixXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i]);
-    for(unsigned int j = 0; j < 4; j++){
-      for(unsigned int k = 0; k < 4; k++){
-        delta_delta_matrix.block(3*tetrahedrons_[i].points_index_[j],3*tetrahedrons_[i].points_index_[k], 3, 3) += delta.block(j*3, k*3, 3, 3);
+    //tetrahedron potential energy
+    for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
+      MatrixXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i]);
+      for(unsigned int j = 0; j < 4; j++){
+        for(unsigned int k = 0; k < 4; k++){
+          delta_2_potential_matrix_.block(3*tetrahedrons_[i].points_index_[j],3*tetrahedrons_[i].points_index_[k], 3, 3) += delta.block(j*3, k*3, 3, 3);
+        }
       }
     }
+    delta_2_potential_matrix_computed_ = true;
   }
 
-  return delta_delta_matrix;
+  return delta_2_potential_matrix_;
 }
 
 void LinearFEMSystem::update_velocity_vector(const VectorXd &velocity){

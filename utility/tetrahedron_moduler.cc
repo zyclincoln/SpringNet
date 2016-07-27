@@ -13,7 +13,7 @@ void TetrahedronModuler::AddPoint(const vector<Vector3d> &positions){
 
 void TetrahedronModuler::AddTetrahedron(const vector<vector<unsigned int>> &points_index){
   for(unsigned int i = 0; i < points_index.size(); i++){
-    tetrahedrons_.push_back(Tetrahedron(0.2, 20, points_index[i]));
+    tetrahedrons_.push_back(Tetrahedron(0.3, 80, points_index[i]));
   }
 }
 

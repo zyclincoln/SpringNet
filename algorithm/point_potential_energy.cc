@@ -13,8 +13,8 @@ double PointPotentialEnergyCalculator::calculate_potential_energy(Point &point){
 }
 
 VectorXd PointPotentialEnergyCalculator::calculate_delta_potential_energy(Point &point){
-  //return Vector3d(0, point.mass_*G, 0);
-  return Vector3d::Zero();
+  return Vector3d(0, point.mass_*G, 0);
+  // return Vector3d::Zero();
 }
 
 MatrixXd PointPotentialEnergyCalculator::calculate_delta_delta_potential_energy(Point &point){

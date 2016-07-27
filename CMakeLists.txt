@@ -22,8 +22,9 @@ include_directories(${OPENGL_INCLUDE_DIR})
 find_package(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 
-find_package(Boost COMPONENTS system thread REQUIRED)
+find_package(Boost COMPONENTS timer REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIR})
 
 SET(LIB_SRC
   algorithm/implicit_euler_integrator.cc
@@ -44,31 +45,35 @@ SET(LIB_SRC
 
 add_library(spring_mass_system STATIC ${LIB_SRC})
 
-add_executable(FrameWorkTest framework_test.cc elastic_plane.cc matrix_op.cc obj_reader.cc)
-add_executable(SpringMassSystem spring_mass_system.cc)
-add_executable(Test ./test/vtk_reader_test.cc)
+# add_executable(FrameWorkTest framework_test.cc elastic_plane.cc matrix_op.cc obj_reader.cc)
+# add_executable(SpringMassSystem spring_mass_system.cc)
+# add_executable(Test ./test/vtk_reader_test.cc)
 add_executable(LinearFEMSystem tetrahedron_linear_system.cc)
 
-target_link_libraries(FrameWorkTest
-	glfw
-	GLEW
-	${OPENGL_LIBRARIES}
-)
+# target_link_libraries(FrameWorkTest
+# 	glfw
+# 	GLEW
+# 	${OPENGL_LIBRARIES}
+#   ${Boost_LIBRARIES}
+# )
 
-target_link_libraries(SpringMassSystem
-  glfw
-  GLEW
-  ${OPENGL_LIBRARIES}
-  spring_mass_system
-)
+# target_link_libraries(SpringMassSystem
+#   glfw
+#   GLEW
+#   ${OPENGL_LIBRARIES}
+#   spring_mass_system
+#   ${Boost_LIBRARIES}
+# )
 
-target_link_libraries(Test
-  spring_mass_system
-)
+# target_link_libraries(Test
+#   spring_mass_system
+#   ${Boost_LIBRARIES}
+# )
 
 target_link_libraries(LinearFEMSystem
   glfw
   GLEW
   ${OPENGL_LIBRARIES}
   spring_mass_system
+ ${Boost_LIBRARIES}
 )
