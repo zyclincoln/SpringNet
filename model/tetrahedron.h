@@ -12,6 +12,7 @@ namespace zyclincoln{
     Tetrahedron(const double poison, const double young, const std::vector<unsigned int> &points_index);
     void PreCompute(const std::vector<Point> &points);
     void ComputeDx(const std::vector<Point> &points);
+    void ComputeR();    // make sure the Dx has been updated
     double poison_;
     double young_;
     std::vector<unsigned int> points_index_;
@@ -20,6 +21,7 @@ namespace zyclincoln{
     Eigen::VectorXd v_;
     double lambda_ = 0;
     double miu_ = 0;
+    Eigen::MatrixXd r_;
   };
 
 }

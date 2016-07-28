@@ -39,6 +39,7 @@ namespace zyclincoln{
     for(unsigned int i = 0; i <tetrahedron_size; i++){
       fout << 10 << endl;
     }
+    fout.close();
   }
 }
 #endif

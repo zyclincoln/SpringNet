@@ -6,10 +6,11 @@ using namespace zyclincoln;
 
 //static const double G = 0.001 * 9.8;
 
-static const double G = 0.05;
+static const double G = 0.098*3;
+static const double H = -20;
 
 double PointPotentialEnergyCalculator::calculate_potential_energy(Point &point){
-  return 0.5*point.mass_*pow(point.speed_.norm(), 2);
+  return point.mass_*G*(point.position_(2, 0) - H);
 }
 
 VectorXd PointPotentialEnergyCalculator::calculate_delta_potential_energy(Point &point){

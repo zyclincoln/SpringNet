@@ -24,6 +24,7 @@ namespace zyclincoln{
     virtual Eigen::VectorXd position_vector();
     virtual void update_velocity_vector(const Eigen::VectorXd &velocity);
     virtual void update_position_vector(const Eigen::VectorXd &position);
+    virtual double total_energy();
 
     void set_time_step_ms(const double time_step_ms);
     void set_point_potential_energy_calculator(const PointPotentialEnergyCalculator &calculator);
@@ -35,6 +36,7 @@ namespace zyclincoln{
     void update_draw_line();
     std::vector<Point> points();
     std::vector<Tetrahedron> tetrahedrons();
+    void set_corotate();
   
   private:
     const unsigned int ctetrahedrons_;
@@ -48,10 +50,13 @@ namespace zyclincoln{
     Eigen::VectorXd aux_points_position_vector_;
     Eigen::MatrixXd delta_2_potential_matrix_;
     bool delta_2_potential_matrix_computed_ = false;
+    bool corotate = false;
 
     Eigen::VectorXd draw_line_;
 
     std::set<unsigned int> static_points_;
+    std::vector<unsigned int> static_points_vector_;
+    std::vector<Point> static_points_original_;
 
     PointPotentialEnergyCalculator point_potential_energy_calculator_;
     TetrahedronPotentialEnergyCalculator tetrahedron_potential_energy_calculator_;
@@ -95,6 +100,10 @@ namespace zyclincoln{
 
   inline std::vector<Tetrahedron> LinearFEMSystem::tetrahedrons(){
     return tetrahedrons_;
+  }
+
+  inline void LinearFEMSystem::set_corotate(){
+    corotate = true;
   }
 
 }

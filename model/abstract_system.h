@@ -9,6 +9,7 @@ namespace zyclincoln{
   public:
     virtual Eigen::MatrixXd mass_matrix() = 0;
     virtual Eigen::VectorXd delta_potential_energy_vector() = 0;
+    virtual double total_energy() = 0;
     virtual Eigen::MatrixXd delta_delta_potential_energy_matrix() = 0;
     virtual Eigen::VectorXd velocity_vector() = 0;
     virtual Eigen::VectorXd position_vector() = 0;

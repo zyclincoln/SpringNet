@@ -57,13 +57,17 @@ using namespace std;
 using namespace Eigen;
 using namespace zyclincoln;
 
-void TetrahedronPotentialEnergyCalculator::PreCompute(Tetrahedron &tetrahedron, Point &point0, Point &point1, Point &point2, Point& point3){
+void TetrahedronPotentialEnergyCalculator::PreCompute(Tetrahedron &tetrahedron, Point &point0, Point &point1, Point &point2, Point& point3, bool corotate){
   vector<Point> points_set;
   points_set.push_back(point0);
   points_set.push_back(point1);
   points_set.push_back(point2);
   points_set.push_back(point3);
   tetrahedron.ComputeDx(points_set);
+  if(corotate == true){
+    tetrahedron.ComputeR();
+    tetrahedron.dx_ = tetrahedron.r_.inverse()*tetrahedron.dx_;
+  }
   // cout << "inverse check : " << endl << tetrahedron.dx_*tetrahedron.p_inverse_ << endl;
   delta_ = Matrix3d::Zero();
 
@@ -102,20 +106,11 @@ double TetrahedronPotentialEnergyCalculator::calculate_potential_energy(Tetrahed
   energy = tetrahedron.lambda_*pow((-3 + delta_0_), 2);
   energy += tetrahedron.miu_*(pow(delta_(0, 0), 2) + pow(delta_(0, 1), 2)*0.5 + pow(delta_(1, 1), 2)*0.5
     + pow(delta_(0, 2), 2)*0.5 + pow(delta_(2, 2), 2) + pow(delta_(1, 2), 2)*0.5);
-  // cout << "energy : " << energy << endl;
-  // cout << "delta_0_: " << delta_0_ << endl;
-  // cout << "delta 0,1: " << delta_(0, 1) << endl;
-  // cout << "delta 0,2: " << delta_(0, 2) << endl;
-  // cout << "delta 1,2: " << delta_(1, 2) << endl;
-  // cout << "delta 0,0: " << delta_(0, 0) << endl;
-  // cout << "delta 1,1: " << delta_(1, 1) << endl;
-  // cout << "delta 2,2: " << delta_(2, 2) << endl;
-  // cout << "miu : " << tetrahedron.miu_ << endl;
-  // cout << "lambda : " << tetrahedron.lambda_ << endl;
+
   return energy;
 }
 
-VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(Tetrahedron &tetrahedron){
+VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(Tetrahedron &tetrahedron, bool corotate){
   VectorXd elastic_force;
   elastic_force.resize(12, 1);
   elastic_force.setZero();
@@ -138,11 +133,33 @@ VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(
   for(unsigned int i = 0; i < 3; i++){
     elastic_force.segment<3>((i+1)*3) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(i).transpose();
   }
-  // cout << "===energy===" << endl;
-  // cout << calculate_potential_energy(tetrahedron) << endl;
-  // cout << "===force===" << endl;
-  // cout << elastic_force << endl;
-  // cout << "=== end ===" << endl;
+
+  if(corotate == true){
+    for(unsigned int i = 0; i < 4; i++){
+      elastic_force.segment<3>(i*3) = tetrahedron.r_*elastic_force.segment<3>(i*3);
+    }
+  }
+
+  // {
+  //   cout << "force: \n"<<elastic_force.transpose()<< endl;
+  //   Vector3d total_force = Vector3d::Zero();
+  //   total_force = elastic_force.segment<3>(0) + elastic_force.segment<3>(3)
+  //     + elastic_force.segment<3>(6) + elastic_force.segment<3>(9);
+  //   cout << "net force norm: \n" << total_force.norm() << endl;
+  // }
+
+  // Vector3d total_force = Vector3d::Zero();
+  // total_force = elastic_force.segment<3>(0) + elastic_force.segment<3>(3)
+  //   + elastic_force.segment<3>(6) + elastic_force.segment<3>(9);
+  // if(elastic_force.norm() > 10e-9){
+  //   cout << "!!! elastic force abnormal" << endl;
+  //   cout << "=== elastic force report begin ===" << endl;
+  //   cout << elastic_force.norm() << endl;
+  //   cout << elastic_force.transpose() << endl;
+  //   cout << "=== elastic force report end ===" << endl;
+  // }
+
+
   return elastic_force;
 }
 
@@ -170,8 +187,12 @@ MatrixXd TetrahedronPotentialEnergyCalculator::calculate_delta_delta_potential_e
   }
   // cout << "miu : " << tetrahedron.miu_ << endl;
   // cout << "lambda : " << tetrahedron.lambda_ << endl;
-  // cout << "p_inverse : " << tetrahedron.p_inverse_.transpose() << endl;
+  // cout << "p_inverse : " << tetrahedron.p_inverse_ << endl;
   // cout << "v_: " << tetrahedron.v_.transpose() << endl;
+  // cout << "=== tetrahedron d2 potential report begin ===" << endl;
+  // cout << (stiff - stiff.transpose()).norm() << endl;
+  // cout << "=== tetrahedron d2 potential report end===" << endl;
 
+  // cout << "stiff: \n" << stiff << endl;
   return stiff;
 }

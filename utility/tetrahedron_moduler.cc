@@ -7,13 +7,13 @@ using namespace zyclincoln;
 
 void TetrahedronModuler::AddPoint(const vector<Vector3d> &positions){
   for(unsigned int i = 0; i < positions.size(); i++){
-    points_.push_back(Point(positions[i], Vector3d(0, 0, 0), 10));
+    points_.push_back(Point(positions[i], Vector3d(0, 0, 0), 1));
   }
 }
 
 void TetrahedronModuler::AddTetrahedron(const vector<vector<unsigned int>> &points_index){
   for(unsigned int i = 0; i < points_index.size(); i++){
-    tetrahedrons_.push_back(Tetrahedron(0.3, 80, points_index[i]));
+    tetrahedrons_.push_back(Tetrahedron(0.33, 30, points_index[i]));
   }
 }
 

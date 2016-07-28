@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <math.h>
 #include <iostream>
+#include <utility>
 #include "fem_system.h"
+#include "../algorithm/spring_potential_energy.h"
+#include "spring.h"
 #include "matrix_op.h"
 
 using namespace Eigen;
@@ -28,11 +31,25 @@ VectorXd LinearFEMSystem::delta_potential_energy_vector(){
   //tetrahedron potential energy
   for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
     tetrahedron_potential_energy_calculator_.PreCompute(tetrahedrons_[i], points_[tetrahedrons_[i].points_index_[0]],
-      points_[tetrahedrons_[i].points_index_[1]], points_[tetrahedrons_[i].points_index_[2]], points_[tetrahedrons_[i].points_index_[3]]);
-    VectorXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_potential_energy(tetrahedrons_[i]);
+      points_[tetrahedrons_[i].points_index_[1]], points_[tetrahedrons_[i].points_index_[2]], points_[tetrahedrons_[i].points_index_[3]], corotate);
+
+    // cout << " point :\n" << points_[tetrahedrons_[i].points_index_[0]].position_.transpose() << endl << points_[tetrahedrons_[i].points_index_[1]].position_.transpose() << endl
+    //   << points_[tetrahedrons_[i].points_index_[2]].position_.transpose() << endl << points_[tetrahedrons_[i].points_index_[3]].position_.transpose() << endl;
+    // cout << "inverse: \n" << tetrahedrons_[i].p_inverse_ << endl;
+
+
+    VectorXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_potential_energy(tetrahedrons_[i], corotate);
     for(unsigned int j = 0; j < 4; j++){
       delta_vector.segment<3>(3*tetrahedrons_[i].points_index_[j]) += delta.segment<3>(j*3);
     }
+  }
+    //constraint as string
+  SimpleSpringPotentialEnergyCalculator constraint_calculator;
+  for(unsigned int i = 0; i < static_points_vector_.size(); i++){
+    Spring spring(5000, 0, pair<unsigned int, unsigned int>(0, 1));
+    VectorXd delta = constraint_calculator.calculate_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i]);
+    delta_vector.segment<3>(3*static_points_vector_[i]) += delta.segment<3>(0); 
+    // cout << "spring " << i << endl << delta.transpose() << endl;
   }
 
   return delta_vector;
@@ -45,6 +62,7 @@ MatrixXd LinearFEMSystem::delta_delta_potential_energy_matrix(){
 
     //tetrahedron potential energy
     for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
+      // cout << "index: " << i << endl;
       MatrixXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i]);
       for(unsigned int j = 0; j < 4; j++){
         for(unsigned int k = 0; k < 4; k++){
@@ -52,9 +70,17 @@ MatrixXd LinearFEMSystem::delta_delta_potential_energy_matrix(){
         }
       }
     }
-    delta_2_potential_matrix_computed_ = true;
-  }
 
+    delta_2_potential_matrix_computed_ = true;
+
+    //constraint as string
+    SimpleSpringPotentialEnergyCalculator constraint_calculator;
+    for (unsigned int i = 0; i < static_points_vector_.size(); ++i){
+      Spring spring(5000, 0, pair<unsigned int, unsigned int>(0, 1));
+      MatrixXd delta = constraint_calculator.calculate_delta_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i]);
+      delta_2_potential_matrix_.block(3*static_points_vector_[i], 3*static_points_vector_[i], 3, 3) += delta.block(0, 0, 3, 3); 
+    }
+  }
   return delta_2_potential_matrix_;
 }
 
@@ -62,10 +88,10 @@ void LinearFEMSystem::update_velocity_vector(const VectorXd &velocity){
   assert(velocity.rows() == points_.size()*3);
 
   for(unsigned int i = 0; i < points_.size(); i++){
-    if(static_points_.find(i) == static_points_.end()){
+    // if(static_points_.find(i) == static_points_.end()){
       points_[i].speed_ = velocity.segment<3>(i*3);
       aux_points_velocity_vector_.segment<3>(i*3) = velocity.segment<3>(i*3);
-    }
+    // }
   }
 }
 
@@ -73,16 +99,18 @@ void LinearFEMSystem::update_position_vector(const VectorXd &position){
   assert(position.rows() == points_.size()*3);
 
   for(unsigned int i = 0; i < points_.size(); i++){
-    if(static_points_.find(i) == static_points_.end()){
+    // if(static_points_.find(i) == static_points_.end()){
       points_[i].position_ = position.segment<3>(i*3);
       aux_points_position_vector_.segment<3>(i*3) = position.segment<3>(i*3);
-    }
+    // }
   }
 }
 
 void LinearFEMSystem::add_static_points(std::vector<unsigned int> index_of_static_points){
   for(unsigned int i = 0; i < index_of_static_points.size(); i++){
     static_points_.insert(index_of_static_points[i]);
+    static_points_vector_.push_back(index_of_static_points[i]);
+    static_points_original_.push_back(points_[index_of_static_points[i]]);
   }
 }
 
@@ -99,7 +127,7 @@ void LinearFEMSystem::add_points(const std::vector<Point> &points){
     aux_points_velocity_vector_.segment<3>((current_size + i)*3) = points[i].speed_;
   }
 
-  cout<<"add "<<points.size()<<" points"<<endl;
+  // cout<<"add "<<points.size()<<" points"<<endl;
 }
 
 void LinearFEMSystem::add_tetrahedrons(const std::vector<Tetrahedron> &tetrahedrons){
@@ -115,6 +143,11 @@ void LinearFEMSystem::add_tetrahedrons(const std::vector<Tetrahedron> &tetrahedr
     point_set.push_back(points_[tetrahedrons[i].points_index_[1]]);
     point_set.push_back(points_[tetrahedrons[i].points_index_[2]]);
     point_set.push_back(points_[tetrahedrons[i].points_index_[3]]);
+    // cout << "index: " << i << endl;
+    // cout << "point: " << points_[tetrahedrons[i].points_index_[0]].position_.transpose() << endl;
+    // cout << "point: " << points_[tetrahedrons[i].points_index_[1]].position_.transpose() << endl;
+    // cout << "point: " << points_[tetrahedrons[i].points_index_[2]].position_.transpose() << endl;
+    // cout << "point: " << points_[tetrahedrons[i].points_index_[3]].position_.transpose() << endl;
     tetrahedrons_[current_size + i].PreCompute(point_set);
   }
 }
@@ -135,4 +168,35 @@ void LinearFEMSystem::update_draw_line(){
     draw_line_.segment<3>(i*36+30) = aux_points_position_vector_.segment<3>(tetrahedrons_[i].points_index_[2]);
     draw_line_.segment<3>(i*36+33) = aux_points_position_vector_.segment<3>(tetrahedrons_[i].points_index_[3]);
   }
+}
+
+double LinearFEMSystem::total_energy(){
+  double point_potential_energy = 0;
+  double point_kinetic_energy = 0;
+  for(unsigned int i = 0; i < points_.size(); i++){
+    point_potential_energy += point_potential_energy_calculator_.calculate_potential_energy(points_[i]);
+    point_kinetic_energy += 0.5*points_[i].mass_*pow(points_[i].speed_.norm(), 2);
+  }
+
+
+  double string_potential_energy = 0;
+  for(unsigned int i = 0; i < static_points_vector_.size(); i++){
+    SpringPotentialEnergyCalculator calculator;
+    Spring spring(100, 0, pair<unsigned int, unsigned int>(0, 1));
+    string_potential_energy += calculator.calculate_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i]);
+  }
+
+  double tetrahedron_potential_energy = 0;
+  for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
+    tetrahedron_potential_energy += tetrahedron_potential_energy_calculator_.calculate_potential_energy(tetrahedrons_[i]);
+  }
+
+  // cout << "=== energy report begin===" << endl;
+  // cout << "point potential energy : " << point_potential_energy << endl;
+  // cout << "point kinetic energy : " << point_kinetic_energy << endl;
+  // cout << "string potential energy : " << string_potential_energy << endl; 
+  // cout << "tetrahedron potential energy : " << tetrahedron_potential_energy << endl;
+  // cout << "total energy : " << point_kinetic_energy + point_potential_energy+ string_potential_energy + tetrahedron_potential_energy << endl;
+  // cout << "=== energy report end ===" << endl;
+  return point_kinetic_energy + point_potential_energy+ string_potential_energy + tetrahedron_potential_energy;
 }

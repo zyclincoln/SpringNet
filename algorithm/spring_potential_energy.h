@@ -14,6 +14,14 @@ namespace zyclincoln{
     Eigen::VectorXd calculate_delta_potential_energy(Spring &spring, Point &point0, Point &point1);
     Eigen::MatrixXd calculate_delta_delta_potential_energy(Spring &spring, Point &point0, Point &point1);
   };
+
+  class SimpleSpringPotentialEnergyCalculator{
+  public:
+    double calculate_potential_energy(Spring &spring, Point &point0, Point &point1);
+    Eigen::VectorXd calculate_delta_potential_energy(Spring &spring, Point &point0, Point &point1);
+    Eigen::MatrixXd calculate_delta_delta_potential_energy(Spring &spring, Point &point0, Point &point1);
+  };
+
 }
 
 #endif

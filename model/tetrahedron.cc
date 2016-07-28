@@ -1,6 +1,7 @@
 #include "tetrahedron.h"
 #include <assert.h>
 #include <iostream>
+#include <Eigen/SVD>
 using namespace std;
 using namespace zyclincoln;
 using namespace Eigen;
@@ -27,8 +28,10 @@ void Tetrahedron::PreCompute(const std::vector<Point> &points){
   for(unsigned int i = 0; i < 3; i++){
     position.col(i) = points[i + 1].position_ - points[0].position_;
   }
-
+  // cout << "position: \n" << position << endl;
   p_inverse_ = position.inverse();
+
+  // cout << "p_inverse_: \n" << p_inverse_ << endl;
 
   v_ = -p_inverse_.row(0).transpose() - p_inverse_.row(1).transpose() - p_inverse_.row(2).transpose();
 
@@ -41,5 +44,18 @@ void Tetrahedron::ComputeDx(const std::vector<Point> &points){
 
   for(unsigned int i = 0; i < 3; i++){
     dx_.col(i) = points[i+1].position_ - points[0].position_;
+  }
+
+}
+
+void Tetrahedron::ComputeR(){
+  r_ = MatrixXd::Zero(3, 3);
+
+  JacobiSVD<MatrixXd> svd(dx_*p_inverse_, ComputeThinU | ComputeThinV);
+  r_ = svd.matrixU()*svd.matrixV().transpose();
+
+  if(r_.determinant() < 0){
+    cout << "===rotation matrix===" << endl;
+    cout << r_.determinant() << endl;
   }
 }

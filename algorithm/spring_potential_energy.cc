@@ -34,3 +34,20 @@ MatrixXd SpringPotentialEnergyCalculator::calculate_delta_delta_potential_energy
 
   return delta;
 }
+
+double SimpleSpringPotentialEnergyCalculator::calculate_potential_energy(Spring &spring, Point &point0, Point &point1){
+  return 0.5*spring.stiff_*pow((point0.position_ - point1.position_).norm(), 2);
+}
+
+VectorXd SimpleSpringPotentialEnergyCalculator::calculate_delta_potential_energy(Spring &spring, Point &point0, Point &point1){
+  VectorXd delta = VectorXd::Zero(3, 1);
+  delta = spring.stiff_*(point0.position_ - point1.position_);
+
+  return delta;
+}
+
+MatrixXd SimpleSpringPotentialEnergyCalculator::calculate_delta_delta_potential_energy(Spring &spring, Point &point0, Point &point1){
+  Matrix3d delta = Matrix3d::Identity()*spring.stiff_;
+
+  return delta;
+}

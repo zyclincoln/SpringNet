@@ -11,7 +11,7 @@ using namespace Eigen;
 using namespace zyclincoln;
 
 void ImplicitEulerIntegrator::next_frame(AbstractSystem& system){
-  timeval time0, time1;
+  // timeval time0, time1;
 
   if(solver_pre_computed_ == false){
     MatrixXd A = system.mass_matrix() + 
@@ -29,7 +29,7 @@ void ImplicitEulerIntegrator::next_frame(AbstractSystem& system){
   
     // cout << (A-A.transpose()).norm() << endl;
     /* check symmetry */
-    cout << (A-A.transpose()).norm() << endl;
+    // cout << (A-A.transpose()).norm() << endl;
   
     solver.compute(A.sparseView());
     if(solver.info()!=Success){
@@ -37,17 +37,26 @@ void ImplicitEulerIntegrator::next_frame(AbstractSystem& system){
       return;
     }
     solver_pre_computed_ = true;
+    
+    // cout <<"===A===\n" << A << endl;
   }
 
-  gettimeofday(&time0, 0);
-  VectorXd b = -system.delta_potential_energy_vector()*system.time_step_ms() - 
-  pow(system.time_step_ms(), 2)*system.delta_delta_potential_energy_matrix()*system.velocity_vector();
+  // gettimeofday(&time0, 0);
+  VectorXd f = system.delta_potential_energy_vector();
+  VectorXd b = -f*system.time_step_ms() - pow(system.time_step_ms(), 2)*system.delta_delta_potential_energy_matrix()*system.velocity_vector();
+
+  // cout <<"===f===\n" << system.delta_potential_energy_vector().transpose() << endl;
 
   VectorXd delta_velocity = solver.solve(b);
+  // VectorXd delta_velocity = (system.mass_matrix() + pow(system.time_step_ms(), 2)*system.delta_delta_potential_energy_matrix()).inverse()*b;
+  // gettimeofday(&time1,0);
+  // double timeuse = 1000000*(time1.tv_sec - time0.tv_sec) + time1.tv_usec - time0.tv_usec;
+  // cout << "solve time: " << timeuse/1000 << "ms" << endl;
+  // cout << "f : \n" << f.transpose() << endl;
+  // cout << "b : \n" << b.transpose() << endl;
+  // cout << "delta velocity: \n" << delta_velocity.transpose() << endl;
 
-  gettimeofday(&time1,0);
-  double timeuse = 1000000*(time1.tv_sec - time0.tv_sec) + time1.tv_usec - time0.tv_usec;
-  cout << "solve time: " << timeuse/1000 << "ms" << endl;
+  // system.total_energy();
 
   VectorXd new_velocity = system.velocity_vector() + delta_velocity;
   VectorXd new_position = system.position_vector() + new_velocity*system.time_step_ms();

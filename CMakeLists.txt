@@ -49,6 +49,8 @@ add_library(spring_mass_system STATIC ${LIB_SRC})
 # add_executable(SpringMassSystem spring_mass_system.cc)
 # add_executable(Test ./test/vtk_reader_test.cc)
 add_executable(LinearFEMSystem tetrahedron_linear_system.cc)
+add_executable(CorotateFEMSystem tetrahedron_corotate_system.cc)
+add_executable(vol_to_vtk vol_to_vtk.cc)
 
 # target_link_libraries(FrameWorkTest
 # 	glfw
@@ -75,5 +77,15 @@ target_link_libraries(LinearFEMSystem
   GLEW
   ${OPENGL_LIBRARIES}
   spring_mass_system
- ${Boost_LIBRARIES}
+)
+
+target_link_libraries(CorotateFEMSystem
+  glfw
+  GLEW
+  ${OPENGL_LIBRARIES}
+  spring_mass_system
+)
+
+target_link_libraries(vol_to_vtk
+  spring_mass_system
 )

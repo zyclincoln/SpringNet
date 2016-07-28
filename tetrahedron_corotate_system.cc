@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <sstream>
-#include <boost/timer/timer.hpp>
 #include <sys/time.h>
 
 #define GLEW_STATIC
@@ -20,10 +19,6 @@
 using namespace std;
 using namespace Eigen;
 using namespace zyclincoln;
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
-
 
 void read_file(VTKReader &vtk_reader, TetrahedronModuler &moduler, const char* path){
   string vtk_path = string(path) + ".vtk";
@@ -67,10 +62,11 @@ GLFWwindow* view_init(){
 }
 
 void build_tetrahedron_system(TetrahedronModuler &moduler, LinearFEMSystem &system){
-  system.set_time_step_ms(1);
+  system.set_time_step_ms(0.5);
   system.add_points(moduler.point());
   system.add_tetrahedrons(moduler.tetrahedron());
   system.add_static_points(moduler.index_of_static_points());
+  system.set_corotate();
 //  system.update_draw_line();
 }
 
@@ -134,7 +130,7 @@ int main(int argc, char** argv){
     cout <<" calculate " << i << " frame : " << endl;
     stringstream ss;
     string output(argv[1]);
-    ss << output << "_result_" << i+1 << ".vtk";
+    ss << output << "_corotate_result_" << i+1 << ".vtk";
     ss >> output;
     linear_fem_system_to_vtk(system, output);
     integrator.next_frame(system);
@@ -142,7 +138,7 @@ int main(int argc, char** argv){
     gettimeofday(&endtime,0);
     double timeuse = 1000000*(endtime.tv_sec - starttime.tv_sec) + endtime.tv_usec - starttime.tv_usec;
 
-    // cout << "total time: " << timeuse/1000 << "ms" << endl << endl;
+    cout << "total time: " << timeuse/1000 << "ms" << endl;
   }
   return 0;
 }
