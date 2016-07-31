@@ -110,10 +110,11 @@ double TetrahedronPotentialEnergyCalculator::calculate_potential_energy(Tetrahed
   return energy;
 }
 
-VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(Tetrahedron &tetrahedron, bool corotate){
-  VectorXd elastic_force;
-  elastic_force.resize(12, 1);
-  elastic_force.setZero();
+int TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(Tetrahedron &tetrahedron, VectorXd &delta, bool corotate){
+  if(delta.rows() != 12 || delta.cols() != 1){
+    delta.resize(12, 1);
+  }
+  delta.setZero();
 
   VectorXd line1;
   line1.resize(12, 1);
@@ -122,77 +123,89 @@ VectorXd TetrahedronPotentialEnergyCalculator::calculate_delta_potential_energy(
     line1.segment<3>((i+1)*3) = tetrahedron.p_inverse_.row(i).transpose();
   }
 
-  elastic_force = 2*tetrahedron.lambda_*line1*(-3 + delta_0_);
+  delta = 2*tetrahedron.lambda_*line1*(-3 + delta_0_);
 
   Matrix3d matrix1 = delta_;
   for(unsigned int i = 0; i < 3; i++){
     matrix1(i, i) *=2;
   }
 
-  elastic_force.segment<3>(0) += tetrahedron.miu_*matrix1*tetrahedron.v_;
+  delta.segment<3>(0) += tetrahedron.miu_*matrix1*tetrahedron.v_;
   for(unsigned int i = 0; i < 3; i++){
-    elastic_force.segment<3>((i+1)*3) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(i).transpose();
+    delta.segment<3>((i+1)*3) += tetrahedron.miu_*matrix1*tetrahedron.p_inverse_.row(i).transpose();
   }
 
   if(corotate == true){
     for(unsigned int i = 0; i < 4; i++){
-      elastic_force.segment<3>(i*3) = tetrahedron.r_*elastic_force.segment<3>(i*3);
+      delta.segment<3>(i*3) = tetrahedron.r_*delta.segment<3>(i*3);
     }
   }
 
   // {
-  //   cout << "force: \n"<<elastic_force.transpose()<< endl;
+  //   cout << "force: \n"<<delta.transpose()<< endl;
   //   Vector3d total_force = Vector3d::Zero();
-  //   total_force = elastic_force.segment<3>(0) + elastic_force.segment<3>(3)
-  //     + elastic_force.segment<3>(6) + elastic_force.segment<3>(9);
+  //   total_force = delta.segment<3>(0) + delta.segment<3>(3)
+  //     + delta.segment<3>(6) + delta.segment<3>(9);
   //   cout << "net force norm: \n" << total_force.norm() << endl;
   // }
 
   // Vector3d total_force = Vector3d::Zero();
-  // total_force = elastic_force.segment<3>(0) + elastic_force.segment<3>(3)
-  //   + elastic_force.segment<3>(6) + elastic_force.segment<3>(9);
-  // if(elastic_force.norm() > 10e-9){
+  // total_force = delta.segment<3>(0) + delta.segment<3>(3)
+  //   + delta.segment<3>(6) + delta.segment<3>(9);
+  // if(delta.norm() > 10e-9){
   //   cout << "!!! elastic force abnormal" << endl;
   //   cout << "=== elastic force report begin ===" << endl;
-  //   cout << elastic_force.norm() << endl;
-  //   cout << elastic_force.transpose() << endl;
+  //   cout << delta.norm() << endl;
+  //   cout << delta.transpose() << endl;
   //   cout << "=== elastic force report end ===" << endl;
   // }
 
 
-  return elastic_force;
+  return 0;
 }
 
-MatrixXd TetrahedronPotentialEnergyCalculator::calculate_delta_delta_potential_energy(Tetrahedron &tetrahedron){
-  MatrixXd stiff;
-  stiff.resize(12, 12);
-  stiff.setZero();
-  stiff.block(0, 0, 3, 3) = (2*tetrahedron.lambda_ + tetrahedron.miu_)*tetrahedron.v_*tetrahedron.v_.transpose()
+int TetrahedronPotentialEnergyCalculator::calculate_delta_delta_potential_energy(Tetrahedron &tetrahedron, MatrixXd &delta, bool corotate){
+  if(delta.rows() != 12 || delta.cols() != 12){
+    delta.resize(12, 12);
+  }
+
+  delta.setZero();
+  delta.block(0, 0, 3, 3) = (2*tetrahedron.lambda_ + tetrahedron.miu_)*tetrahedron.v_*tetrahedron.v_.transpose()
     + (tetrahedron.miu_*tetrahedron.v_.transpose()*tetrahedron.v_)(0,0)*Matrix3d::Identity(); 
   for(unsigned int i = 1; i < 4; i++){
-    stiff.block(0, i*3, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.v_.transpose()
+    delta.block(0, i*3, 3, 3) = tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.v_.transpose()
       + 2*tetrahedron.lambda_*tetrahedron.v_*tetrahedron.p_inverse_.row(i - 1)
       + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.v_)(0, 0)*Matrix3d::Identity();
-    //stiff.block(i*3, 0, 3, 3) = stiff.block(0, i*3, 3, 3).transpose();
-    stiff.block(i*3, 0, 3, 3) = tetrahedron.miu_*tetrahedron.v_*tetrahedron.p_inverse_.row(i - 1)
+    //delta.block(i*3, 0, 3, 3) = delta.block(0, i*3, 3, 3).transpose();
+    delta.block(i*3, 0, 3, 3) = tetrahedron.miu_*tetrahedron.v_*tetrahedron.p_inverse_.row(i - 1)
       + 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.v_.transpose()
       + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.v_)(0, 0)*Matrix3d::Identity();
   }
   for(unsigned int i = 1; i < 4; i++){
     for(unsigned int j = 1; j < 4; j++){
-      stiff.block(i*3, j*3, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.p_inverse_.row(j - 1)
+      delta.block(i*3, j*3, 3, 3) = 2*tetrahedron.lambda_*tetrahedron.p_inverse_.row(i - 1).transpose()*tetrahedron.p_inverse_.row(j - 1)
         + tetrahedron.miu_*tetrahedron.p_inverse_.row(j - 1).transpose()*tetrahedron.p_inverse_.row(i - 1) +
         + (tetrahedron.miu_*tetrahedron.p_inverse_.row(i - 1)*tetrahedron.p_inverse_.row(j - 1).transpose())(0,0)*Matrix3d::Identity();
     }
+  }
+
+  if(corotate == true){
+    MatrixXd R = MatrixXd::Zero(12, 12);
+    MatrixXd Rt = MatrixXd::Zero(12, 12);
+    for(unsigned int i = 0; i < 4; i++){
+      R.block(i*3, i*3, 3, 3) = tetrahedron.r_;
+      Rt.block(i*3, i*3, 3, 3) = tetrahedron.r_.inverse();
+    }
+    delta = R*delta*Rt;
   }
   // cout << "miu : " << tetrahedron.miu_ << endl;
   // cout << "lambda : " << tetrahedron.lambda_ << endl;
   // cout << "p_inverse : " << tetrahedron.p_inverse_ << endl;
   // cout << "v_: " << tetrahedron.v_.transpose() << endl;
   // cout << "=== tetrahedron d2 potential report begin ===" << endl;
-  // cout << (stiff - stiff.transpose()).norm() << endl;
+  // cout << (delta - delta.transpose()).norm() << endl;
   // cout << "=== tetrahedron d2 potential report end===" << endl;
 
-  // cout << "stiff: \n" << stiff << endl;
-  return stiff;
+  // cout << "delta: \n" << delta << endl;
+  return 0;
 }

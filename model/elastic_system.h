@@ -20,11 +20,11 @@ namespace zyclincoln{
 		ElasticSystem(const unsigned int points_num, const unsigned int springs_num);
 		
 		virtual double time_step_ms();
-		virtual Eigen::MatrixXd mass_matrix();
-    virtual Eigen::VectorXd delta_potential_energy_vector();
-    virtual Eigen::MatrixXd delta_delta_potential_energy_matrix();
-    virtual Eigen::VectorXd velocity_vector();
-    virtual Eigen::VectorXd position_vector();
+		virtual Eigen::MatrixXd& mass_matrix();
+    virtual void delta_potential_energy_vector(Eigen::VectorXd &delta);
+    virtual void delta_delta_potential_energy_matrix(Eigen::MatrixXd &delta);
+    virtual Eigen::VectorXd& velocity_vector();
+    virtual Eigen::VectorXd& position_vector();
     virtual void update_velocity_vector(const Eigen::VectorXd &velocity);
     virtual void update_position_vector(const Eigen::VectorXd &position);
 
@@ -61,21 +61,21 @@ namespace zyclincoln{
 		return time_step_ms_;
 	}
 
-	inline Eigen::MatrixXd ElasticSystem::mass_matrix(){
+	inline Eigen::MatrixXd& ElasticSystem::mass_matrix(){
 		Eigen::MatrixXd shrinked_mass;
 		ShrinkMatrix(aux_mass_matrix_, static_lines_, static_lines_, shrinked_mass);
 
 		return shrinked_mass;
 	}
 
-	inline Eigen::VectorXd ElasticSystem::position_vector(){
+	inline Eigen::VectorXd& ElasticSystem::position_vector(){
 		Eigen::VectorXd shrinked_position;
 		ShrinkColVector(aux_points_position_vector_, static_lines_, shrinked_position);
 
 		return shrinked_position;
 	}
 
-	inline Eigen::VectorXd ElasticSystem::velocity_vector(){
+	inline Eigen::VectorXd& ElasticSystem::velocity_vector(){
 		Eigen::VectorXd shrinked_velocity;
 		ShrinkColVector(aux_points_velocity_vector_, static_lines_, shrinked_velocity);
 

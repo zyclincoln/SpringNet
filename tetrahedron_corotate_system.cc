@@ -123,6 +123,7 @@ int main(int argc, char** argv){
 //  return run(system, window);
 
   ImplicitEulerIntegrator integrator;
+  integrator.set_nonlinear();
   for(unsigned int i = 0; i < 300; i++){ 
     timeval starttime, endtime;
     gettimeofday(&starttime,0);

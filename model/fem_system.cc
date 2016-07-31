@@ -1,7 +1,10 @@
+#include <sys/time.h>
+
 #include <assert.h>
 #include <math.h>
 #include <iostream>
 #include <utility>
+#include <omp.h>
 #include "fem_system.h"
 #include "../algorithm/spring_potential_energy.h"
 #include "spring.h"
@@ -21,24 +24,26 @@ LinearFEMSystem::LinearFEMSystem(const unsigned int points_num, const unsigned i
   draw_line_ = Eigen::VectorXd::Zero(ctetrahedrons_*6*2*3, 1);
 }
 
-VectorXd LinearFEMSystem::delta_potential_energy_vector(){
-  VectorXd delta_vector = VectorXd::Zero(cpoints_*3);
+void LinearFEMSystem::delta_potential_energy_vector(VectorXd &delta_vector){
+  delta_vector = VectorXd::Zero(cpoints_*3);
   //points potential energy
   for(unsigned int i = 0; i < points_.size(); i++){
     delta_vector.segment<3>(3*i) += point_potential_energy_calculator_.calculate_delta_potential_energy(points_[i]);
   }
 
   //tetrahedron potential energy
+  #pragma omp parallel for
   for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
     tetrahedron_potential_energy_calculator_.PreCompute(tetrahedrons_[i], points_[tetrahedrons_[i].points_index_[0]],
-      points_[tetrahedrons_[i].points_index_[1]], points_[tetrahedrons_[i].points_index_[2]], points_[tetrahedrons_[i].points_index_[3]], corotate);
+      points_[tetrahedrons_[i].points_index_[1]], points_[tetrahedrons_[i].points_index_[2]], points_[tetrahedrons_[i].points_index_[3]], corotate_);
 
     // cout << " point :\n" << points_[tetrahedrons_[i].points_index_[0]].position_.transpose() << endl << points_[tetrahedrons_[i].points_index_[1]].position_.transpose() << endl
     //   << points_[tetrahedrons_[i].points_index_[2]].position_.transpose() << endl << points_[tetrahedrons_[i].points_index_[3]].position_.transpose() << endl;
     // cout << "inverse: \n" << tetrahedrons_[i].p_inverse_ << endl;
-
-
-    VectorXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_potential_energy(tetrahedrons_[i], corotate);
+    // Matrix<double, 12, 1> delta;
+    VectorXd delta;
+    delta.resize(12, 1);
+    tetrahedron_potential_energy_calculator_.calculate_delta_potential_energy(tetrahedrons_[i], delta, corotate_);
     for(unsigned int j = 0; j < 4; j++){
       delta_vector.segment<3>(3*tetrahedrons_[i].points_index_[j]) += delta.segment<3>(j*3);
     }
@@ -47,41 +52,56 @@ VectorXd LinearFEMSystem::delta_potential_energy_vector(){
   SimpleSpringPotentialEnergyCalculator constraint_calculator;
   for(unsigned int i = 0; i < static_points_vector_.size(); i++){
     Spring spring(5000, 0, pair<unsigned int, unsigned int>(0, 1));
-    VectorXd delta = constraint_calculator.calculate_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i]);
+    // Vector3d delta;
+    // delta.setZero();
+    VectorXd delta;
+    delta.resize(3, 1);
+    constraint_calculator.calculate_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i], delta);
     delta_vector.segment<3>(3*static_points_vector_[i]) += delta.segment<3>(0); 
     // cout << "spring " << i << endl << delta.transpose() << endl;
   }
-
-  return delta_vector;
 }
 
-MatrixXd LinearFEMSystem::delta_delta_potential_energy_matrix(){
-  if(delta_2_potential_matrix_computed_ == false){
+void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_potential_matrix_){
+  timeval time0, time1;
+  if(delta_2_potential_matrix_computed_ == false || corotate_ == true){
     delta_2_potential_matrix_ = MatrixXd::Zero(cpoints_*3, cpoints_*3);
     //points potential energy -- nothing to do
 
     //tetrahedron potential energy
+
+    gettimeofday(&time0, 0);
+
+    #pragma omp parallel for
     for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
-      // cout << "index: " << i << endl;
-      MatrixXd delta = tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i]);
-      for(unsigned int j = 0; j < 4; j++){
-        for(unsigned int k = 0; k < 4; k++){
+      // Matrix<double, 12, 12> delta;
+      MatrixXd delta;
+      delta.resize(12, 12);
+      tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i], delta, corotate_);
+      #pragma omp parallel for
+      for(unsigned int k = 0; k < 4; k++){
+        for(unsigned int j = 0; j < 4; j++){
           delta_2_potential_matrix_.block(3*tetrahedrons_[i].points_index_[j],3*tetrahedrons_[i].points_index_[k], 3, 3) += delta.block(j*3, k*3, 3, 3);
         }
       }
     }
+    gettimeofday(&time1, 0);
 
+    cout << "== time to cal del2: " << (1000000*(time1.tv_sec - time0.tv_sec) + time1.tv_usec - time0.tv_usec)/1000 << " ms" << endl;
     delta_2_potential_matrix_computed_ = true;
 
     //constraint as string
     SimpleSpringPotentialEnergyCalculator constraint_calculator;
     for (unsigned int i = 0; i < static_points_vector_.size(); ++i){
       Spring spring(5000, 0, pair<unsigned int, unsigned int>(0, 1));
-      MatrixXd delta = constraint_calculator.calculate_delta_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i]);
+      // Matrix3d delta;
+      // delta.setZero();
+      MatrixXd delta;
+      delta.resize(3, 3);
+      constraint_calculator.calculate_delta_delta_potential_energy(spring, points_[static_points_vector_[i]], static_points_original_[i], delta);
       delta_2_potential_matrix_.block(3*static_points_vector_[i], 3*static_points_vector_[i], 3, 3) += delta.block(0, 0, 3, 3); 
     }
   }
-  return delta_2_potential_matrix_;
 }
 
 void LinearFEMSystem::update_velocity_vector(const VectorXd &velocity){

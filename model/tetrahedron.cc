@@ -49,9 +49,9 @@ void Tetrahedron::ComputeDx(const std::vector<Point> &points){
 }
 
 void Tetrahedron::ComputeR(){
-  r_ = MatrixXd::Zero(3, 3);
+  r_ = Matrix3d::Zero();
 
-  JacobiSVD<MatrixXd> svd(dx_*p_inverse_, ComputeThinU | ComputeThinV);
+  JacobiSVD<MatrixXd> svd(dx_*p_inverse_, ComputeFullU | ComputeFullV);
   r_ = svd.matrixU()*svd.matrixV().transpose();
 
   if(r_.determinant() < 0){

@@ -17,11 +17,11 @@ namespace zyclincoln{
     LinearFEMSystem(const unsigned int points_num, const unsigned int tetrahedrons_num);
 
     virtual double time_step_ms();
-    virtual Eigen::MatrixXd mass_matrix();
-    virtual Eigen::VectorXd delta_potential_energy_vector();
-    virtual Eigen::MatrixXd delta_delta_potential_energy_matrix();
-    virtual Eigen::VectorXd velocity_vector();
-    virtual Eigen::VectorXd position_vector();
+    virtual Eigen::MatrixXd& mass_matrix();
+    virtual void delta_potential_energy_vector(Eigen::VectorXd &delta);
+    virtual void delta_delta_potential_energy_matrix(Eigen::MatrixXd &delta);
+    virtual Eigen::VectorXd& velocity_vector();
+    virtual Eigen::VectorXd& position_vector();
     virtual void update_velocity_vector(const Eigen::VectorXd &velocity);
     virtual void update_position_vector(const Eigen::VectorXd &position);
     virtual double total_energy();
@@ -50,7 +50,7 @@ namespace zyclincoln{
     Eigen::VectorXd aux_points_position_vector_;
     Eigen::MatrixXd delta_2_potential_matrix_;
     bool delta_2_potential_matrix_computed_ = false;
-    bool corotate = false;
+    bool corotate_ = false;
 
     Eigen::VectorXd draw_line_;
 
@@ -66,15 +66,15 @@ namespace zyclincoln{
     return time_step_ms_;
   }
 
-  inline Eigen::MatrixXd LinearFEMSystem::mass_matrix(){
+  inline Eigen::MatrixXd& LinearFEMSystem::mass_matrix(){
     return aux_mass_matrix_;
   }
 
-  inline Eigen::VectorXd LinearFEMSystem::position_vector(){
+  inline Eigen::VectorXd& LinearFEMSystem::position_vector(){
     return aux_points_position_vector_;
   }
 
-  inline Eigen::VectorXd LinearFEMSystem::velocity_vector(){
+  inline Eigen::VectorXd& LinearFEMSystem::velocity_vector(){
     return aux_points_velocity_vector_;
   }
 
@@ -103,7 +103,7 @@ namespace zyclincoln{
   }
 
   inline void LinearFEMSystem::set_corotate(){
-    corotate = true;
+    corotate_ = true;
   }
 
 }

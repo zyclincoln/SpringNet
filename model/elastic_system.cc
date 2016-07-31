@@ -18,7 +18,7 @@ ElasticSystem::ElasticSystem(const unsigned int points_num, const unsigned int s
 	draw_line_ = Eigen::VectorXd::Zero(csprings_*2*3, 1);
 }
 
-VectorXd ElasticSystem::delta_potential_energy_vector(){
+void ElasticSystem::delta_potential_energy_vector(VectorXd &delta){
 	VectorXd delta_vector = VectorXd::Zero(cpoints_*3);
 	//points potential energy
 	for(unsigned int i = 0; i < points_.size(); i++){
@@ -27,23 +27,27 @@ VectorXd ElasticSystem::delta_potential_energy_vector(){
 
 	//string potential energy
 	for(unsigned int i = 0; i < springs_.size(); i++){
-		VectorXd delta = springs_potential_energy_calculator_.calculate_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second]);
-		delta_vector.segment<3>(3*springs_[i].between_.first) += delta.segment<3>(0);
-		delta_vector.segment<3>(3*springs_[i].between_.second) += delta.segment<3>(3);
+		VectorXd sub_delta;
+		springs_potential_energy_calculator_.calculate_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second], sub_delta);
+		delta_vector.segment<3>(3*springs_[i].between_.first) += sub_delta.segment<3>(0);
+		delta_vector.segment<3>(3*springs_[i].between_.second) += sub_delta.segment<3>(3);
 	}
 
 	VectorXd shrinked_vector;
 	ShrinkColVector(delta_vector, static_lines_, shrinked_vector);
-	return shrinked_vector;
+	delta = shrinked_vector;
 }
 
-MatrixXd ElasticSystem::delta_delta_potential_energy_matrix(){
+void ElasticSystem::delta_delta_potential_energy_matrix(MatrixXd &delta){
 	MatrixXd delta_delta_matrix = MatrixXd::Zero(cpoints_*3, cpoints_*3);
 	//points potential energy -- nothing to do
 
 	//string potential energy
 	for(unsigned int i=0; i < springs_.size(); i++){
-		MatrixXd delta = springs_potential_energy_calculator_.calculate_delta_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second]);
+		// Matrix<double, 6, 6> delta;
+		MatrixXd delta;
+		delta.resize(6, 6);
+		springs_potential_energy_calculator_.calculate_delta_delta_potential_energy(springs_[i], points_[springs_[i].between_.first], points_[springs_[i].between_.second], delta);
 		delta_delta_matrix.block(3*springs_[i].between_.first, 3*springs_[i].between_.first, 3, 3) += delta.block(0, 0, 3, 3);
 		delta_delta_matrix.block(3*springs_[i].between_.first, 3*springs_[i].between_.second, 3, 3) += delta.block(0, 3, 3, 3);
 		delta_delta_matrix.block(3*springs_[i].between_.second, 3*springs_[i].between_.first, 3, 3) += delta.block(3, 0, 3, 3);

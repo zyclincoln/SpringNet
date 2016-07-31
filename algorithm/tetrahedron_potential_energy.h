@@ -10,8 +10,8 @@ namespace zyclincoln{
   class TetrahedronPotentialEnergyCalculator{
   public:
     double calculate_potential_energy(Tetrahedron &tetrahedron);
-    Eigen::VectorXd calculate_delta_potential_energy(Tetrahedron &tetrahedron, bool corotate = false);
-    Eigen::MatrixXd calculate_delta_delta_potential_energy(Tetrahedron &tetrahedron);
+    int calculate_delta_potential_energy(Tetrahedron &tetrahedron, Eigen::VectorXd &delta, bool corotate = false);
+    int calculate_delta_delta_potential_energy(Tetrahedron &tetrahedron, Eigen::MatrixXd &delta, bool corotate = false);
     void PreCompute(Tetrahedron &tetrahedron, Point &point0, Point &point1, Point &point2, Point& point3, bool corotate = false);
   private:
     Eigen::MatrixXd delta_;
