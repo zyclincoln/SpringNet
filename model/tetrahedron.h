@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include "point.h"
 
 namespace zyclincoln{

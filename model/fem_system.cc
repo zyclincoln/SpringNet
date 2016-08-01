@@ -32,7 +32,6 @@ void LinearFEMSystem::delta_potential_energy_vector(VectorXd &delta_vector){
   }
 
   //tetrahedron potential energy
-  #pragma omp parallel for
   for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
     tetrahedron_potential_energy_calculator_.PreCompute(tetrahedrons_[i], points_[tetrahedrons_[i].points_index_[0]],
       points_[tetrahedrons_[i].points_index_[1]], points_[tetrahedrons_[i].points_index_[2]], points_[tetrahedrons_[i].points_index_[3]], corotate_);
@@ -62,7 +61,7 @@ void LinearFEMSystem::delta_potential_energy_vector(VectorXd &delta_vector){
   }
 }
 
-void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_potential_matrix_){
+void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_potential_matrix){
   timeval time0, time1;
   if(delta_2_potential_matrix_computed_ == false || corotate_ == true){
     delta_2_potential_matrix_ = MatrixXd::Zero(cpoints_*3, cpoints_*3);
@@ -72,13 +71,11 @@ void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_pote
 
     gettimeofday(&time0, 0);
 
-    #pragma omp parallel for
     for(unsigned int i = 0; i < tetrahedrons_.size(); i++){
       // Matrix<double, 12, 12> delta;
       MatrixXd delta;
       delta.resize(12, 12);
       tetrahedron_potential_energy_calculator_.calculate_delta_delta_potential_energy(tetrahedrons_[i], delta, corotate_);
-      #pragma omp parallel for
       for(unsigned int k = 0; k < 4; k++){
         for(unsigned int j = 0; j < 4; j++){
           delta_2_potential_matrix_.block(3*tetrahedrons_[i].points_index_[j],3*tetrahedrons_[i].points_index_[k], 3, 3) += delta.block(j*3, k*3, 3, 3);
@@ -87,7 +84,7 @@ void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_pote
     }
     gettimeofday(&time1, 0);
 
-    cout << "== time to cal del2: " << (1000000*(time1.tv_sec - time0.tv_sec) + time1.tv_usec - time0.tv_usec)/1000 << " ms" << endl;
+    // cout << "== time to cal del2: " << (1000000*(time1.tv_sec - time0.tv_sec) + time1.tv_usec - time0.tv_usec)/1000 << " ms" << endl;
     delta_2_potential_matrix_computed_ = true;
 
     //constraint as string
@@ -102,6 +99,7 @@ void LinearFEMSystem::delta_delta_potential_energy_matrix(MatrixXd &delta_2_pote
       delta_2_potential_matrix_.block(3*static_points_vector_[i], 3*static_points_vector_[i], 3, 3) += delta.block(0, 0, 3, 3); 
     }
   }
+  delta_2_potential_matrix = delta_2_potential_matrix_;
 }
 
 void LinearFEMSystem::update_velocity_vector(const VectorXd &velocity){

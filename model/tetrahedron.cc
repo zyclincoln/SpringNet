@@ -13,7 +13,7 @@ Tetrahedron::Tetrahedron(const double poison, const double young, const vector<u
   assert(points_index.size() == 4);
 
   points_index_ = points_index;
-  p_inverse_ = MatrixXd::Zero(3, 3);
+  p_inverse_ = Matrix3d::Zero();
   v_ = Vector3d::Zero();
 
   miu_ = young_/(2*(1+poison_));
@@ -23,7 +23,8 @@ Tetrahedron::Tetrahedron(const double poison, const double young, const vector<u
 void Tetrahedron::PreCompute(const std::vector<Point> &points){
   assert(points.size() == 4);
 
-  MatrixXd position = MatrixXd::Zero(3, 3);
+  Matrix3d position;
+  position.setZero();
 
   for(unsigned int i = 0; i < 3; i++){
     position.col(i) = points[i + 1].position_ - points[0].position_;
@@ -40,7 +41,7 @@ void Tetrahedron::PreCompute(const std::vector<Point> &points){
 void Tetrahedron::ComputeDx(const std::vector<Point> &points){
   assert(points.size() == 4);
 
-  dx_ = MatrixXd::Zero(3, 3);
+  dx_ = Matrix<double, 3, 3>::Zero();
 
   for(unsigned int i = 0; i < 3; i++){
     dx_.col(i) = points[i+1].position_ - points[0].position_;
@@ -51,7 +52,7 @@ void Tetrahedron::ComputeDx(const std::vector<Point> &points){
 void Tetrahedron::ComputeR(){
   r_ = Matrix3d::Zero();
 
-  JacobiSVD<MatrixXd> svd(dx_*p_inverse_, ComputeFullU | ComputeFullV);
+  JacobiSVD<Matrix3d> svd(dx_*p_inverse_, ComputeFullU | ComputeFullV);
   r_ = svd.matrixU()*svd.matrixV().transpose();
 
   if(r_.determinant() < 0){

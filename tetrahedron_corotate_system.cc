@@ -62,7 +62,7 @@ GLFWwindow* view_init(){
 }
 
 void build_tetrahedron_system(TetrahedronModuler &moduler, LinearFEMSystem &system){
-  system.set_time_step_ms(0.5);
+  system.set_time_step_ms(0.3);
   system.add_points(moduler.point());
   system.add_tetrahedrons(moduler.tetrahedron());
   system.add_static_points(moduler.index_of_static_points());

@@ -62,7 +62,7 @@ GLFWwindow* view_init(){
 }
 
 void build_tetrahedron_system(TetrahedronModuler &moduler, LinearFEMSystem &system){
-  system.set_time_step_ms(0.5);
+  system.set_time_step_ms(0.3);
   system.add_points(moduler.point());
   system.add_tetrahedrons(moduler.tetrahedron());
   system.add_static_points(moduler.index_of_static_points());
@@ -123,7 +123,7 @@ int main(int argc, char** argv){
 
   ImplicitEulerIntegrator integrator;
   integrator.set_reduce();
-  integrator.set_nonlinear();
+  // VectorXd old_position = system.position_vector();
   for(unsigned int i = 0; i < 300; i++){ 
     timeval starttime, endtime;
     gettimeofday(&starttime,0);
@@ -131,12 +131,13 @@ int main(int argc, char** argv){
     cout <<" calculate " << i << " frame : " << endl;
     stringstream ss;
     string output(argv[1]);
-    ss << output << "_corotate_result_" << i+1 << ".vtk";
+    ss << output << "_reduce_result_" << i+1 << ".vtk";
     ss >> output;
-    linear_fem_system_to_vtk(system, output);
-    integrator.next_frame(system);
 
-    return 0;
+    integrator.next_frame(system);
+    linear_fem_system_to_vtk(system, output);
+    // system.update_position_vector(old_position);
+    
     gettimeofday(&endtime,0);
     double timeuse = 1000000*(endtime.tv_sec - starttime.tv_sec) + endtime.tv_usec - starttime.tv_usec;
 
