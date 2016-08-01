@@ -59,6 +59,7 @@ add_library(spring_mass_system STATIC ${LIB_SRC})
 add_executable(LinearFEMSystem tetrahedron_linear_system.cc)
 add_executable(CorotateFEMSystem tetrahedron_corotate_system.cc)
 add_executable(vol_to_vtk vol_to_vtk.cc)
+add_executable(LinearModelReduce linear_model_reduce.cc)
 
 # target_link_libraries(FrameWorkTest
 # 	glfw
@@ -95,5 +96,12 @@ target_link_libraries(CorotateFEMSystem
 )
 
 target_link_libraries(vol_to_vtk
+  spring_mass_system
+)
+
+target_link_libraries(LinearModelReduce
+  glfw
+  GLEW
+  ${OPENGL_LIBRARIES}
   spring_mass_system
 )
